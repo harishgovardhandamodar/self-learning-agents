@@ -50,6 +50,11 @@ class Stream:
     train_seed: int = 1
     eval_offset: int = 100_000
     eval_seed: int = 2
+    # How the stream is ordered. "blocked" is one family at a time (the
+    # paper's protocol). "interleaved" mixes families per episode, which is
+    # what production traffic looks like. "recurring" brings a family back
+    # every few blocks.
+    order: str = "blocked"
 
     # ------------------------------------------------------------- geometry
 
@@ -129,9 +134,19 @@ class Stream:
     # ------------------------------------------------------------- sampling
 
     def training_tasks(self) -> List[envs.Task]:
-        """The stream, in arrival order: blocks of training tasks."""
+        """
+        The stream, in arrival order.
+
+        For a blocked stream this is blocks of training tasks. For an
+        interleaved stream the families are mixed per episode, so the router
+        must choose under a changing composition and the memory must hold
+        several families at once - which is what production traffic looks
+        like and what the paper's blocked protocol cannot show.
+        """
         tasks: List[envs.Task] = []
         groups = envs.group_by_id()
+        if self.order == "interleaved":
+            return self._interleaved_tasks(groups)
         for b in self.blocks:
             g = groups.get(b.group)
             if g is None:
@@ -139,6 +154,33 @@ class Stream:
             tasks.extend(g.sample(b.n_train, offset=self.train_offset,
                                   seed=self.train_seed))
         return tasks
+
+    def _interleaved_tasks(self, groups: Dict[str, Any]) -> List[envs.Task]:
+        """
+        Mix the families per episode instead of in blocks.
+
+        Each family still contributes its block's quota of training tasks, but
+        the arrival order is round-robin over the families, so no family is
+        "the current one". The block boundaries are kept for the metrics, but
+        they no longer describe the arrival order.
+        """
+        per_family: Dict[str, List[envs.Task]] = {}
+        for b in self.blocks:
+            g = groups.get(b.group)
+            if g is None or b.group in per_family:
+                continue
+            per_family[b.group] = g.sample(b.n_train, offset=self.train_offset,
+                                            seed=self.train_seed)
+        out: List[envs.Task] = []
+        idx = 0
+        while any(per_family.values()):
+            for gid in list(per_family):
+                if per_family[gid]:
+                    out.append(per_family[gid].pop(0))
+            idx += 1
+            if idx > 10000:  # pragma: no cover - runaway guard
+                break
+        return out
 
     def eval_tasks(self) -> Dict[str, List[envs.Task]]:
         """Disjoint hold-out set per family."""
@@ -274,6 +316,44 @@ SCENARIOS: Dict[str, Dict[str, Any]] = {
         "groups": ["science-assay"],
         "drift": "domain",
     },
+    # ---- stream SHAPES the blocked protocol cannot express -----------------
+    "interleaved": {
+        "name": "Interleaved families",
+        "description": "The families arrive mixed, not in blocks. The router must "
+                       "route per request under a changing composition and the memory "
+                       "must hold several families at once - the closest thing here to "
+                       "production traffic.",
+        "groups": ["sql-formula1", "toolcall-clarify", "health-triage", "trade-signal"],
+        "drift": "compound",
+        "order": "interleaved",
+    },
+    "recurring": {
+        "name": "Recurring family",
+        "description": "A daily-report family recurs every few blocks while other "
+                       "families come and go. Tests recency as well as scope: a stored "
+                       "experience can be in scope and still be stale.",
+        "groups": ["sql-formula1", "toolcall-act", "sql-formula1", "health-triage",
+                   "sql-formula1"],
+        "drift": "compound",
+    },
+    "long-horizon": {
+        "name": "Long horizon (8 blocks)",
+        "description": "Eight blocks of drifting families. Interference and forgetting "
+                       "compound with horizon length, and a short stream cannot show "
+                       "whether degradation is gradual or sudden.",
+        "groups": ["sql-formula1", "sql-codebase", "sql-thrombosis", "science-assay",
+                   "toolcall-clarify", "toolcall-act", "health-triage", "trade-signal"],
+        "drift": "compound",
+    },
+    "hard-order": {
+        "name": "Adversarial ordering",
+        "description": "The confusable pair adjacent, the hardest family first. A method "
+                       "that only wins on a convenient ordering has not been shown to be "
+                       "better.",
+        "groups": ["toolcall-clarify", "toolcall-act", "health-triage",
+                   "health-triage-pediatric", "trade-signal", "trade-signal-meanrev"],
+        "drift": "compound",
+    },
 }
 
 # Permuted orderings of the topic families, for the ordering-control
@@ -326,6 +406,7 @@ def build_stream(scenario: str, block_size: int = 50, n_eval: int = 50,
         train_seed=train_seed,
         eval_offset=eval_offset,
         eval_seed=eval_seed,
+        order=meta.get("order", "blocked"),
     )
 
 
