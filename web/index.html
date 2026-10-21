@@ -18,6 +18,7 @@
     <button data-tab="compare" role="tab" aria-selected="false">Compare</button>
     <button data-tab="reference" role="tab" aria-selected="false">Reference</button>
     <button data-tab="coverage" role="tab" aria-selected="false">Coverage</button>
+    <button data-tab="suite" role="tab" aria-selected="false">Suite</button>
     <button data-tab="patterns" role="tab" aria-selected="false">Patterns</button>
   </nav>
   <div id="llm-health" class="health" title="model backend" role="status">llm: …</div>
@@ -216,6 +217,82 @@
         <div id="cov-gaps" class="cards"></div>
       </div>
     </div>
+  </section>
+
+  <!-- ============================================================== SUITE -->
+  <section id="tab-suite" class="tab" role="tabpanel">
+    <h2>Evaluation suite</h2>
+    <p class="hint">Run the whole comparison in one action, read one report, and
+      get told what to do next. The report gives each cell's mean and spread, the
+      effect size against the best method, a significance verdict that accounts
+      for the number of comparisons, the guardrail violations, and the cost of
+      what was bought.</p>
+    <div class="row">
+      <div class="col col-form">
+        <h3>Launch the suite</h3>
+        <div class="grid2">
+          <label for="s-scope">Scope
+            <select id="s-scope">
+              <option value="fast">fast (4 scenarios)</option>
+              <option value="core">core (7 scenarios)</option>
+              <option value="all">all (21 scenarios)</option>
+            </select>
+          </label>
+          <label for="s-iterations">Iterations per cell
+            <input id="s-iterations" type="number" value="5" min="1" max="100">
+          </label>
+          <label for="s-block">Block size
+            <input id="s-block" type="number" value="20" min="1">
+          </label>
+          <label for="s-eval">Hold-out size
+            <input id="s-eval" type="number" value="30" min="1">
+          </label>
+        </div>
+        <label for="s-evolvers">Evolvers</label>
+        <div id="s-evolvers" class="checks"></div>
+        <div class="row-btns">
+          <button id="s-estimate" class="ghost">Estimate cost</button>
+          <button id="s-run" class="primary">Run the suite</button>
+        </div>
+        <pre id="s-estimate-out" class="detail" style="display:none"></pre>
+        <div id="s-progress" class="progress-wrap" hidden>
+          <div class="progress"><div class="bar" id="s-bar"></div></div>
+          <span id="s-phase" class="meta"></span>
+        </div>
+        <pre id="s-msg" class="msg" role="status" aria-live="polite"></pre>
+      </div>
+      <div class="col">
+        <h3>Advice</h3>
+        <label for="s-domain">Domain
+          <select id="s-domain">
+            <option value="general">general</option>
+            <option value="healthcare">healthcare</option>
+            <option value="finance">finance</option>
+            <option value="trading">trading</option>
+          </select>
+        </label>
+        <div id="s-advice" class="cards"></div>
+      </div>
+    </div>
+    <h3>Report</h3>
+    <div class="row-btns">
+      <label for="s-report-metric" class="inline">Rank by
+        <select id="s-report-metric">
+          <option value="terminal_advantage">terminal advantage</option>
+          <option value="plasticity">plasticity</option>
+          <option value="stability">stability</option>
+          <option value="area_under_curve">area under the curve</option>
+          <option value="forward_transfer">forward transfer</option>
+        </select>
+      </label>
+      <button id="s-refresh-report" class="ghost">Refresh report</button>
+      <button id="s-export-report" class="ghost">Export report (JSON)</button>
+    </div>
+    <div id="s-report" class="table-wrap"><p class="hint">No report yet — run the suite, or a comparison, first.</p></div>
+    <h3>Power</h3>
+    <p class="hint">How many iterations each cell would need to resolve a 5pp
+      margin. Cells that already have enough show a high power now.</p>
+    <div id="s-power" class="table-wrap"></div>
   </section>
 
   <!-- =========================================================== PATTERNS -->

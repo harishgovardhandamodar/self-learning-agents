@@ -59,6 +59,7 @@ $$("nav button").forEach((b) => {
     if (b.dataset.tab === "compare") { loadSummary(); loadRunsForCompare(); }
     if (b.dataset.tab === "reference") loadReference();
     if (b.dataset.tab === "coverage") loadCoverage();
+    if (b.dataset.tab === "suite") { renderSuiteEvolvers(); loadSuiteReport(); loadSuiteAdvice(); }
     if (b.dataset.tab === "patterns") loadPatterns();
   };
 });
@@ -802,6 +803,162 @@ async function loadRecommendation() {
     host.innerHTML = `<div class="empty">${esc(e.message || e)}</div>`;
   }
 }
+
+/* --------------------------------------------------------------- suite */
+let suiteRunIds = [];
+let suitePoll = null;
+
+function renderSuiteEvolvers() {
+  const evs = evolverHelp.ev || [];
+  $("s-evolvers").innerHTML = evs.map((e) =>
+    `<label title="${esc(e.description)}">
+       <input type="checkbox" value="${e.id}" ${e.id === "scoped" ? "checked" : ""}>
+       ${esc(e.id)}</label>`).join("");
+}
+
+function suitePayload() {
+  return {
+    scope: $("s-scope").value,
+    evolvers: $$("#s-evolvers input:checked").map((i) => i.value),
+    iterations: Math.max(1, +$("s-iterations").value || 5),
+    block_size: Math.max(1, +$("s-block").value || 20),
+    n_eval: Math.max(1, +$("s-eval").value || 30),
+  };
+}
+
+$("s-estimate").onclick = async () => {
+  try {
+    const est = await post("/api/suite/estimate", suitePayload());
+    const el = $("s-estimate-out");
+    el.style.display = "block";
+    el.textContent =
+      `${est.runs} runs (${est.scenarios} scenarios × ${est.evolvers} evolvers × ` +
+      `${est.iterations} iterations)\n` +
+      `${est.training_episodes.toLocaleString()} training episodes, ` +
+      `${est.evaluation_episodes.toLocaleString()} evaluation episodes\n` +
+      est.note;
+  } catch (e) { toast(String(e.message || e), "err"); }
+};
+
+$("s-run").onclick = async () => {
+  const body = suitePayload();
+  if (!body.evolvers.length) return toast("Pick at least one evolver", "err");
+  try {
+    const res = await post("/api/suite/run", body);
+    suiteRunIds = res.runs.map((r) => r.run_id);
+    say($("s-msg"), `Launched ${res.count} runs across ${res.scenarios.length} scenarios.`, "ok");
+    toast(`Suite launched: ${res.count} runs`, "ok");
+    $("s-progress").hidden = false;
+    $("s-bar").style.width = "3%";
+    $("s-phase").textContent = "running…";
+    watchSuite();
+  } catch (e) {
+    say($("s-msg"), `Suite run failed: ${e.message || e}`, "err");
+    toast(`Suite run failed: ${e.message || e}`, "err");
+  }
+};
+
+async function watchSuite() {
+  clearInterval(suitePoll);
+  const tick = async () => {
+    if (!suiteRunIds.length) return clearInterval(suitePoll);
+    let done = 0;
+    for (const id of suiteRunIds) {
+      try {
+        const r = await get(`/api/runs/${id}`);
+        if (r.status === "done" || r.status === "error" || r.status === "cancelled") done++;
+      } catch (e) { done++; }
+    }
+    const pct = Math.round((done / suiteRunIds.length) * 100);
+    $("s-bar").style.width = `${Math.max(3, pct)}%`;
+    $("s-phase").textContent = `${done}/${suiteRunIds.length} runs finished`;
+    if (done < suiteRunIds.length) return;
+    clearInterval(suitePoll);
+    $("s-phase").textContent = "suite complete — reading the report";
+    await loadSuiteReport();
+    await loadSuiteAdvice();
+    toast("Suite complete", "ok");
+  };
+  await tick();
+  suitePoll = setInterval(tick, 3000);
+}
+
+async function loadSuiteReport() {
+  const metric = $("s-report-metric").value;
+  const host = $("s-report");
+  host.innerHTML = `<p class="hint">Reading…</p>`;
+  try {
+    const rep = await get(`/api/suite/report?metric=${encodeURIComponent(metric)}`);
+    if (!rep.rows.length) {
+      host.innerHTML = `<p class="hint">${esc(rep.note || "No report yet.")}</p>`;
+      $("s-power").innerHTML = "";
+      return;
+    }
+    const cols = ["terminal_advantage", "plasticity", "stability", "interference", "forgetting"];
+    let h = `<table class="cmp"><tr><th>stream</th><th>evolver</th><th>n</th>
+      ${cols.map((c) => `<th title="${esc(glossary[c]?.meaning || "")}">${esc(glossary[c]?.short || c)}</th>`).join("")}
+      <th>margin</th><th>effect</th><th>significant</th><th>guardrails</th><th>units</th></tr>`;
+    rep.rows.forEach((r) => {
+      const sig = r.is_best ? `<span class="pill ok">best</span>`
+        : (r.significant ? `<span class="pill ok">yes</span>` : `<span class="pill">no</span>`);
+      h += `<tr><td>${esc(r.stream)}</td><td>${esc(r.evolver)}</td><td>${r.n}</td>` +
+        cols.map((c) => `<td>${r.metrics[c] == null ? "–" : r.metrics[c]}</td>`).join("") +
+        `<td>${r.margin_vs_best == null ? "–" : r.margin_vs_best}</td>` +
+        `<td>${r.effect_size == null ? "–" : `${r.effect_size} (${esc(r.effect_label || "")})`}</td>` +
+        `<td>${sig}</td>` +
+        `<td>${(r.guardrails && r.guardrails.total) || 0}</td>` +
+        `<td>${(r.cost && r.cost.total_units) || "–"}</td></tr>`;
+    });
+    h += `</table>`;
+    host.innerHTML = h + `<p class="hint">${esc(rep.note || "")}</p>`;
+
+    if (rep.power && rep.power.length) {
+      $("s-power").innerHTML = `<table class="cmp"><tr><th>stream</th><th>evolver</th>
+        <th>n</th><th>std</th><th>power now</th><th>iterations for 5pp</th></tr>` +
+        rep.power.map((p) => `<tr><td>${esc(p.stream)}</td><td>${esc(p.evolver)}</td>
+          <td>${p.n}</td><td>${p.std}</td><td>${p.power_now == null ? "–" : p.power_now}</td>
+          <td>${p.iterations_needed_for_5pp == null ? "–" : p.iterations_needed_for_5pp}</td></tr>`).join("") +
+        `</table>`;
+    }
+  } catch (e) {
+    host.innerHTML = `<p class="hint">${esc(e.message || e)}</p>`;
+  }
+}
+
+async function loadSuiteAdvice() {
+  const domain = $("s-domain").value;
+  const host = $("s-advice");
+  try {
+    const a = await get(`/api/suite/advice?domain=${encodeURIComponent(domain)}`);
+    host.innerHTML = `<div class="card">
+        <h4>${a.recommendation ? `Use <b>${esc(a.recommendation)}</b>` : "No recommendation yet"}</h4>
+        ${a.wins ? `<div class="meta">wins: ${Object.entries(a.wins).map(([k, v]) => `${esc(k)} × ${v}`).join(", ")}</div>` : ""}
+        ${a.domain_scenarios && a.domain_scenarios.length ? `<div class="meta">scenarios for ${esc(domain)}: ${a.domain_scenarios.map(esc).join(", ")}</div>` : ""}
+        ${a.caveats && a.caveats.length ? `<p><b>Caveats</b><br>${a.caveats.map(esc).join("<br>")}</p>` : ""}
+        ${a.next_steps && a.next_steps.length ? `<p><b>Next</b><br>${a.next_steps.map((s) => "• " + esc(s)).join("<br>")}</p>` : ""}
+        ${a.unmeasured && a.unmeasured.length ? `<p><b>Not measured yet</b><br>${a.unmeasured.map(esc).join("<br>")}</p>` : ""}
+      </div>`;
+  } catch (e) {
+    host.innerHTML = `<div class="empty">${esc(e.message || e)}</div>`;
+  }
+}
+
+$("s-refresh-report").onclick = loadSuiteReport;
+$("s-report-metric").onchange = loadSuiteReport;
+$("s-domain").onchange = loadSuiteAdvice;
+$("s-export-report").onclick = async () => {
+  try {
+    const metric = $("s-report-metric").value;
+    const rep = await get(`/api/suite/report?metric=${encodeURIComponent(metric)}`);
+    const blob = new Blob([JSON.stringify(rep, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `suite-report-${metric}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("Report exported", "ok");
+  } catch (e) { toast(String(e.message || e), "err"); }
+};
 
 /* ------------------------------------------------------------- patterns */
 $("p-domain").onchange = loadPatterns;
