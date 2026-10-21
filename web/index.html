@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-Learning Agent Lab</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<header>
+  <div class="brand">
+    <strong>Self-Learning Agent Lab</strong>
+    <span class="sub">design &middot; build &middot; test &middot; arXiv:2610.25858</span>
+  </div>
+  <nav role="tablist" aria-label="Sections">
+    <button data-tab="designs" class="active" role="tab" aria-selected="true">Designs</button>
+    <button data-tab="runs" role="tab" aria-selected="false">Runs</button>
+    <button data-tab="compare" role="tab" aria-selected="false">Compare</button>
+    <button data-tab="reference" role="tab" aria-selected="false">Reference</button>
+    <button data-tab="coverage" role="tab" aria-selected="false">Coverage</button>
+    <button data-tab="patterns" role="tab" aria-selected="false">Patterns</button>
+  </nav>
+  <div id="llm-health" class="health" title="model backend" role="status">llm: …</div>
+</header>
+<main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- ============================================================ DESIGNS -->
+  <section id="tab-designs" class="tab active" role="tabpanel">
+    <div class="row">
+      <div class="col col-list">
+        <h2>Designs <span id="design-count" class="count"></span></h2>
+        <div id="design-list" class="cards"></div>
+      </div>
+      <div class="col">
+        <h2>New design</h2>
+        <p class="hint">Start from a playbook (recommended) or from scratch. The spec
+          below is the harness the run validates &mdash; edit it before launching.</p>
+        <div class="grid2">
+          <label for="d-name">Name
+            <input id="d-name" value="My agent" autocomplete="off">
+          </label>
+          <label for="d-domain">Domain
+            <select id="d-domain">
+              <option value="general">general</option>
+              <option value="healthcare">healthcare</option>
+              <option value="finance">finance</option>
+              <option value="trading">trading</option>
+            </select>
+          </label>
+          <label for="d-playbook">Playbook
+            <select id="d-playbook"><option value="">(blank)</option></select>
+          </label>
+          <label for="d-evolver">Evolver
+            <select id="d-evolver"></select>
+          </label>
+          <label for="d-stream">Stream
+            <select id="d-stream"></select>
+          </label>
+          <label for="d-policy">Policy
+            <select id="d-policy">
+              <option value="simulated">simulated (fast, deterministic)</option>
+              <option value="live">live (real model)</option>
+            </select>
+          </label>
+        </div>
+        <div class="row-btns">
+          <button id="d-create" class="primary">Create design</button>
+          <button id="d-save">Save spec</button>
+          <button id="d-launch" class="primary">Launch run</button>
+          <button id="d-export">Export project</button>
+        </div>
+        <div id="d-msg" class="msg" role="status" aria-live="polite"></div>
+        <label for="d-spec">Spec (harness + config JSON)
+          <textarea id="d-spec" rows="16" spellcheck="false"></textarea>
+        </label>
+        <h3>Flow diagrams</h3>
+        <p class="hint">Generated from this design: the agent's request path, the
+          harness surfaces the evolver reads and writes, and the stream it faces.
+          The diagram changes when the design does.</p>
+        <div id="d-flows" class="flows"></div>
+        <h3>Recommended patterns</h3>
+        <div id="d-patterns" class="cards"></div>
+        <h3>Guardrails</h3>
+        <div id="d-guardrails" class="cards"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================================================== RUNS -->
+  <section id="tab-runs" class="tab" role="tabpanel">
+    <div class="row">
+      <div class="col col-form">
+        <h2>Run a comparison</h2>
+        <p class="hint">A comparison batch runs every evolver on the same stream.
+          More iterations give error bars instead of one noisy number.</p>
+        <div class="grid2">
+          <label for="r-design">Design
+            <select id="r-design"><option value="">(ad-hoc)</option></select>
+          </label>
+          <label for="r-stream">Stream
+            <select id="r-stream"></select>
+          </label>
+          <label for="r-policy">Policy
+            <select id="r-policy">
+              <option value="simulated">simulated</option>
+              <option value="live">live</option>
+            </select>
+          </label>
+          <label for="r-iterations">Iterations
+            <input id="r-iterations" type="number" value="1" min="1" max="200"
+                   title="How many times to repeat each evolver with fresh task draws">
+          </label>
+          <label for="r-block">Block size
+            <input id="r-block" type="number" value="20" min="1">
+          </label>
+          <label for="r-eval">Hold-out size
+            <input id="r-eval" type="number" value="30" min="1">
+          </label>
+        </div>
+        <fieldset class="evolver-picker">
+          <legend>Evolvers to run</legend>
+          <div id="r-evolvers" class="checks"></div>
+        </fieldset>
+        <div class="row-btns">
+          <button id="r-launch" class="primary">Launch comparison</button>
+          <button id="r-launch-one">Launch single</button>
+          <button id="r-preset-topic">Preset: topic drift</button>
+          <button id="r-preset-workflow">Preset: workflow drift</button>
+        </div>
+        <div id="r-progress" class="progress-wrap" hidden>
+          <div class="progress"><div class="bar" id="r-bar"></div></div>
+          <span id="r-phase" class="meta"></span>
+        </div>
+        <div id="r-msg" class="msg" role="status" aria-live="polite"></div>
+      </div>
+      <div class="col">
+        <h2>History <span id="run-count" class="count"></span></h2>
+        <div class="row-btns">
+          <input id="r-filter" class="filter" placeholder="filter by evolver, stream or id" aria-label="Filter runs">
+          <select id="r-status-filter" class="filter" aria-label="Filter by status">
+            <option value="">all statuses</option>
+            <option value="done">done</option>
+            <option value="running">running</option>
+            <option value="error">error</option>
+            <option value="cancelled">cancelled</option>
+          </select>
+          <button id="r-clear-junk" class="small ghost">Clear failed &amp; cancelled</button>
+        </div>
+        <div id="run-list" class="cards"></div>
+      </div>
+    </div>
+
+    <h2>Run detail</h2>
+    <div id="run-detail" class="detail-empty">Select a run to see its results.</div>
+  </section>
+
+  <!-- ============================================================ COMPARE -->
+  <section id="tab-compare" class="tab" role="tabpanel">
+    <h2>Compare <span id="cmp-count" class="count"></span></h2>
+    <div class="row">
+      <div class="col col-list">
+        <h3>Runs</h3>
+        <div id="cmp-list" class="cards"></div>
+        <div class="row-btns">
+          <button id="cmp-go" class="primary">Compare selected</button>
+          <button id="cmp-all">Select all finished</button>
+        </div>
+      </div>
+      <div class="col">
+        <h3>Summary by cell (mean &plusmn; std)</h3>
+        <div id="cmp-summary" class="cards"></div>
+        <h3>Selected runs</h3>
+        <div id="cmp-out" class="table-wrap"><p class="hint">Select runs and press compare.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== REFERENCE -->
+  <section id="tab-reference" class="tab" role="tabpanel">
+    <h2>Reference bands</h2>
+    <p class="hint" id="ref-source"></p>
+    <div id="ref-legend" class="cards"></div>
+    <label for="ref-scenario">Scenario
+      <select id="ref-scenario"></select>
+    </label>
+    <div id="ref-note" class="hint"></div>
+    <div id="ref-table" class="table-wrap"></div>
+  </section>
+
+  <!-- ========================================================== COVERAGE -->
+  <section id="tab-coverage" class="tab" role="tabpanel">
+    <h2>Suite coverage</h2>
+    <p class="hint" id="cov-summary"></p>
+    <div class="row">
+      <div class="col">
+        <h3>Scenarios</h3>
+        <div id="cov-scenarios" class="cards"></div>
+      </div>
+      <div class="col">
+        <h3>Recommendation</h3>
+        <label for="rec-stream">Stream
+          <select id="rec-stream"></select>
+        </label>
+        <label for="rec-metric">Rank by
+          <select id="rec-metric">
+            <option value="terminal_advantage">terminal advantage</option>
+            <option value="plasticity">plasticity</option>
+            <option value="stability">stability</option>
+            <option value="area_under_curve">area under the curve</option>
+            <option value="forward_transfer">forward transfer</option>
+          </select>
+        </label>
+        <div id="rec-out" class="cards"></div>
+        <h3>Gaps</h3>
+        <div id="cov-gaps" class="cards"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================== PATTERNS -->
+  <section id="tab-patterns" class="tab" role="tabpanel">
+    <h2>Pattern browser</h2>
+    <div class="row-btns">
+      <label for="p-domain" class="inline">Domain
+        <select id="p-domain">
+          <option value="">all</option><option value="general">general</option>
+          <option value="healthcare">healthcare</option><option value="finance">finance</option>
+          <option value="trading">trading</option><option value="support">support</option>
+          <option value="research">research</option><option value="procurement">procurement</option>
+        </select>
+      </label>
+    </div>
+    <div id="pattern-list" class="cards"></div>
+    <h3>Category flows</h3>
+    <p class="hint">The shape each category of pattern tends to take, from the
+      AI-Agents-Patterns catalog.</p>
+    <div id="category-flows" class="flows"></div>
+  </section>
+</main>
+<script src="/static/vendor/mermaid.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
