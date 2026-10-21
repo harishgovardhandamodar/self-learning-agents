@@ -122,6 +122,92 @@ def _p_value(t: float, df: float) -> float:
         return 1.0
 
 
+def cohens_d(a: List[float], b: List[float]) -> float:
+    """
+    Cohen's d: the effect size behind a difference.
+
+    A p-value says "probably not zero". This says how big the difference
+    is in units of the pooled standard deviation, which is what decides
+    whether a statistically significant result is worth acting on.
+    """
+    if len(a) < 2 or len(b) < 2:
+        return 0.0
+    ma, mb = mean_std(a)[0], mean_std(b)[0]
+    va, vb = mean_std(a)[1] ** 2, mean_std(b)[1] ** 2
+    na, nb = len(a), len(b)
+    pooled = ((na - 1) * va + (nb - 1) * vb) / (na + nb - 2)
+    if pooled <= 0:
+        return 0.0
+    return (ma - mb) / math.sqrt(pooled)
+
+
+def effect_label(d: float) -> str:
+    """The conventional reading of a Cohen's d."""
+    a = abs(d)
+    if a < 0.2:
+        return "negligible"
+    if a < 0.5:
+        return "small"
+    if a < 0.8:
+        return "medium"
+    return "large"
+
+
+def power_for_margin(std: float, n: int, margin: float, alpha: float = 0.05) -> float:
+    """
+    The probability of detecting a margin of this size with this many runs.
+
+    Answers "how many iterations do I need?". With no power, a null result
+    is uninterpretable: it may mean "no effect" or "not enough runs".
+    """
+    if n < 2 or std <= 0 or margin == 0:
+        return 1.0 if margin == 0 else 0.0
+    # Normal approximation to the two-sample t-test.
+    se = std * math.sqrt(2.0 / n)
+    if se <= 0:
+        return 1.0
+    z_alpha = 1.96 if alpha >= 0.05 else 2.576
+    lam = abs(margin) / se
+    # P(|Z| > z_alpha | non-central shift lam) via the normal CDF.
+    from math import erf, sqrt
+    def ncdf(x: float) -> float:
+        return 0.5 * (1.0 + erf(x / sqrt(2.0)))
+    power = 1.0 - ncdf(z_alpha - lam) + ncdf(-z_alpha - lam)
+    return max(0.0, min(1.0, power))
+
+
+def iterations_needed(std: float, margin: float, target_power: float = 0.8,
+                      alpha: float = 0.05) -> Optional[int]:
+    """How many runs per cell are needed to resolve a margin."""
+    if std <= 0 or margin == 0:
+        return None
+    for n in range(2, 501):
+        if power_for_margin(std, n, margin, alpha) >= target_power:
+            return n
+    return None
+
+
+def holm_bonferroni(pvalues: Dict[str, float], alpha: float = 0.05) -> Dict[str, Any]:
+    """
+    Multiplicity control across a family of comparisons.
+
+    The suite compares many cells; without correction, some will look
+    significant by chance alone. Holm's step-down procedure is the standard
+    correction and needs no independence assumption.
+    """
+    items = sorted(pvalues.items(), key=lambda kv: kv[1])
+    m = len(items)
+    out: Dict[str, Any] = {"adjusted": {}, "significant": {}, "alpha": alpha,
+                           "n_comparisons": m}
+    running_max = 0.0
+    for i, (key, p) in enumerate(items):
+        adj = min(1.0, (m - i) * p)
+        running_max = max(running_max, adj)
+        out["adjusted"][key] = round(running_max, 6)
+        out["significant"][key] = running_max < alpha
+    return out
+
+
 def compare_cells(cell_a: Dict[str, Any], cell_b: Dict[str, Any],
                   metric: str = "terminal_advantage") -> Dict[str, Any]:
     """Compare two (stream, evolver) cells on one metric."""
@@ -129,14 +215,26 @@ def compare_cells(cell_a: Dict[str, Any], cell_b: Dict[str, Any],
     b = cell_b.get("metrics", {}).get(metric, {})
     xs, ys = a.get("values", []), b.get("values", [])
     out = welch(xs, ys)
+    d = cohens_d(xs, ys)
     out.update({
         "metric": metric,
         "a": {"label": f"{cell_a.get('evolver')}/{cell_a.get('stream')}",
               "n": a.get("n", len(xs)), "mean": a.get("mean")},
         "b": {"label": f"{cell_b.get('evolver')}/{cell_b.get('stream')}",
               "n": b.get("n", len(ys)), "mean": b.get("mean")},
+        "effect_size": round(d, 3),
+        "effect_label": effect_label(d),
+        "pooled_std": round(_pooled_std(xs, ys), 3),
     })
     return out
+
+
+def _pooled_std(a: List[float], b: List[float]) -> float:
+    if len(a) < 2 or len(b) < 2:
+        return 0.0
+    va, vb = mean_std(a)[1] ** 2, mean_std(b)[1] ** 2
+    return math.sqrt(((len(a) - 1) * va + (len(b) - 1) * vb) /
+                     (len(a) + len(b) - 2))
 
 
 def rank_cells(cells: List[Dict[str, Any]],
