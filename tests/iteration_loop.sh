@@ -42,6 +42,14 @@ for round in $(seq 1 "$ROUNDS"); do
   echo "round $round/$ROUNDS   sweep iterations=$ITERS"
   echo "=============================================================="
 
+  # An unreachable lab is an infrastructure problem, not a regression.
+  # Saying so keeps a container restart from being read as a broken build.
+  if ! curl -sf -m 5 "$BASE/api/health" >/dev/null; then
+    echo "round $round: the lab at $BASE is unreachable - is the container up?"
+    FAIL=2
+    break
+  fi
+
   python3 -m tests.sweep --iterations "$ITERS" --block 20 --eval 30 --jobs 8 \
     --scenarios topic,workflow,domain,compound,healthcare-drift,trading-drift,science-drift,domain-workflow,revisit,interleaved,recurring,long-horizon,hard-order \
     --out "/tmp/sla_sweep_r${round}.json" 2>&1 | tail -8
@@ -75,6 +83,8 @@ done
 
 if [ $FAIL -eq 0 ]; then
   echo "all $ROUNDS rounds passed"
+elif [ $FAIL -eq 2 ]; then
+  echo "INFRASTRUCTURE: the lab was unreachable - fix the container and re-run"
 else
   echo "FAILED - see the output above"
 fi
