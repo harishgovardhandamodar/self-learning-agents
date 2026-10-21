@@ -1,0 +1,12 @@
+{
+  "what": "live-vs-simulated seed baseline on the trading family (10 hold-out tasks)",
+  "why": "every number in the suite comes from the simulated policy; this is the evidence for how far they transfer to a real model",
+  "calibration": "the simulator is calibrated to the baselines the paper reports (BFCL-Miss 53.8%, BFCL-Base 77.3%, BIRD-style SQL 52.5%) so the suite is comparable to the paper. The local model is stronger than the paper models on this family.",
+  "family": "trade-signal",
+  "n_holdout": 10,
+  "simulated_baseline_pct": 50.0,
+  "live_baseline_pct": 100.0,
+  "delta_pp": 50.0,
+  "live_elapsed_s": 1039.7,
+  "reading": "the live model already solves this family, so the headroom the simulator measures there is real headroom a real model does not have. Rankings (which method isolates learning) transfer; magnitudes do not, and on families a real model has mastered the live plasticity will be near zero."
+}

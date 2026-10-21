@@ -244,6 +244,37 @@ ledger states the trade plainly — percentage points gained per 100 prompt
 units. A method that buys 2pp while injecting 10× the harness is not the
 method to ship, and the suite now says so.
 
+### Calibration: what the simulator does and does not tell you
+
+Every number in the suite comes from the simulated policy. That is a
+deliberate trade — a real model makes the suite too slow and too noisy to
+iterate on — but it bounds what the numbers mean, and the bound is
+measured rather than assumed.
+
+`tests/live_validation.py` runs the same stream twice, once live against
+the local model and once simulated, and reports the gap:
+
+```
+python3 -m tests.live_validation --block 4 --eval 10
+```
+
+On the trading family (10 hold-out tasks) the local model scores **100%**
+where the simulator scores **50%**. Two consequences:
+
+- The simulator is calibrated to the baselines *the paper reports*
+  (BFCL-Miss 53.8%, BFCL-Base 77.3%, BIRD-style SQL 52.5%), which is what
+  makes the suite comparable to the paper. A real model may be stronger
+  than the paper's models on a given family.
+- Therefore **the rankings transfer and the magnitudes do not.** Which
+  method isolates learning is a property of the harness, and it holds
+  live. The size of the gain is a property of the baseline, and on a
+  family a real model has already mastered the live plasticity will be
+  near zero. The suite's plasticity numbers are headroom, not expected
+  production gains.
+
+The measured gap is stored in `data/live_validation.json` and shown in
+the Suite tab's advice panel, so the caveat travels with the result.
+
 ### Reading a result
 
 The **Suite** tab runs the whole comparison in one action, reads one

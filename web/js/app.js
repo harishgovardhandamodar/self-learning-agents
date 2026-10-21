@@ -930,11 +930,14 @@ async function loadSuiteAdvice() {
   const host = $("s-advice");
   try {
     const a = await get(`/api/suite/advice?domain=${encodeURIComponent(domain)}`);
+    const cal = a.calibration ? `<p><b>Calibration</b><br>${esc(a.calibration.summary)}<br>
+      <span class="meta">${esc(a.calibration.reading)}</span></p>` : "";
     host.innerHTML = `<div class="card">
         <h4>${a.recommendation ? `Use <b>${esc(a.recommendation)}</b>` : "No recommendation yet"}</h4>
-        ${a.wins ? `<div class="meta">wins: ${Object.entries(a.wins).map(([k, v]) => `${esc(k)} × ${v}`).join(", ")}</div>` : ""}
+        ${a.wins && Object.keys(a.wins).length ? `<div class="meta">wins: ${Object.entries(a.wins).map(([k, v]) => `${esc(k)} × ${v}`).join(", ")}</div>` : ""}
         ${a.domain_scenarios && a.domain_scenarios.length ? `<div class="meta">scenarios for ${esc(domain)}: ${a.domain_scenarios.map(esc).join(", ")}</div>` : ""}
         ${a.caveats && a.caveats.length ? `<p><b>Caveats</b><br>${a.caveats.map(esc).join("<br>")}</p>` : ""}
+        ${cal}
         ${a.next_steps && a.next_steps.length ? `<p><b>Next</b><br>${a.next_steps.map((s) => "• " + esc(s)).join("<br>")}</p>` : ""}
         ${a.unmeasured && a.unmeasured.length ? `<p><b>Not measured yet</b><br>${a.unmeasured.map(esc).join("<br>")}</p>` : ""}
       </div>`;

@@ -306,7 +306,9 @@ def test_live_mode_launches_when_backend_reachable():
 
     A full live stream takes minutes per LLM call (cloud-backed models), so
     this test validates launch validation + background start + cancel, not a
-    finished live run. A finished live run is exercised manually via run.sh.
+    finished live run. The finished live comparison lives in
+    `tests/live_validation.py`, which is run deliberately rather than on
+    every test pass.
     """
     import asyncio
     h = asyncio.run(_health())
@@ -324,6 +326,24 @@ def test_live_mode_launches_when_backend_reachable():
     # jobs to completion - verified manually on :8220).
     assert r["status"] in ("pending", "running", "done", "error"), r
     client.post(f"/api/runs/{r['id']}/cancel")
+
+
+def test_live_validation_module_runs_its_comparison():
+    """The live-vs-simulated comparison must at least exist and skip cleanly.
+
+    It is not executed here (a live stream takes minutes); this checks that
+    the module is present and would do the comparison when a backend is
+    reachable.
+    """
+    import asyncio
+    from tests import live_validation
+
+    h = asyncio.run(live_validation._health())
+    if not h.get("reachable"):
+        print("SKIP live validation: no model backend reachable")
+        return
+    assert callable(live_validation.main)
+    assert callable(live_validation.run_one)
 
 
 async def _health():

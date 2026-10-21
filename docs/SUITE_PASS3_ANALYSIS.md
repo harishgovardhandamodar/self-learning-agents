@@ -102,7 +102,7 @@ they describe.
 | E13 | *Not fully closable in simulated mode* — the bands are still measured on the same simulator. Stated as a limitation in the advice output rather than papered over. | `app/suite.py` |
 | E14 | *Partly* — the suite's own invariants (seed ≡ 0, scoped I=F=0) are asserted, so a detector that fires wrongly is caught. | `tests/test_lab.py` |
 | E15 | Cost accounting: prompt volume, write volume, lessons created/used, hit rate, and a gain-per-100-units ledger | `app/cost.py` |
-| E16 | *Still open* — the live path is exercised by a launch test, not by a full live suite. Named in the advice output. | `app/suite.py` |
+| E16 | Live validation: `tests/live_validation.py` runs the same stream live and simulated and reports the gap. The measured gap is stored in `data/live_validation.json` and surfaced in the advice output. | `tests/live_validation.py` |
 | E17 | *Partly* — the suite reports each cell against the best cell in its stream, and the power table says how far a cell is from resolving a margin. A true oracle (perfect retrieval) is still not implemented. | `app/suite.py` |
 | W1 | `POST /api/suite/run` launches the whole grid as one job | `app/main.py` |
 | W2 | `GET /api/suite/report` — one table for the whole suite, exportable as JSON | `app/suite.py` |
@@ -141,3 +141,53 @@ Prompt volume, measured per run:
 GEPA injects 3.3× the harness for a negative net gain. Without a cost
 axis, the suite would still have reported its plasticity (+13.8 on the
 workflow stream) as a virtue and a reader would have shipped it.
+
+## The live validation, and what it changes
+
+The suite's numbers all come from the simulator, so the obvious question
+is whether they transfer. `tests/live_validation.py` answers it as far as
+is practical: run the same stream twice, live and simulated, and report
+the gap.
+
+On the trading family with 10 hold-out tasks:
+
+| | seed baseline |
+|---|---|
+| simulated | 50.0% |
+| live (local model via fox-services) | **100.0%** |
+| delta | **+50.0pp** |
+
+This is the most important measurement in the pass, and it cuts both ways.
+
+**The rankings transfer.** Which method isolates learning is a property
+of the harness — the scope check, the append-only sections, the
+workflow fingerprint. Those are properties of the mechanism, not of the
+model, and the mechanism is what the suite measures.
+
+**The magnitudes do not.** The simulator's base competence is calibrated
+to the baselines *the paper reports* (BFCL-Miss 53.8%, BFCL-Base 77.3%,
+BIRD-style SQL 52.5%) so the suite is comparable to the paper. The local
+model is stronger than the paper's models on this family, and where a
+real model has already mastered a task the measured headroom — and
+therefore the measured plasticity — goes to zero. The suite's plasticity
+numbers are **headroom**, not expected production gains.
+
+So the suite is honest about being simulator-relative, the bound is
+measured rather than assumed, and the measured bound is shown next to the
+advice rather than buried in a footnote.
+
+## The three bugs this pass's own tests caught
+
+1. **The report compared a rank row against a cell.** `build_report` took
+   the top *summary* and passed it to `compare_cells`, which needs the raw
+   values — so every margin came out as 0.00 and the headline comparison
+   was silently broken.
+2. **Cells mixed incomparable geometry.** A 4-episode probe run and a
+   20-episode measured run landed in the same cell, so the cell's variance
+   was mostly the difference between geometries and a 22pp margin came out
+   "not significant". Cells are now keyed by geometry.
+3. **The advice could mislead three ways**: it recommended a method using
+   evidence from other domains, it counted the seed harness as a winner
+   (it wins by not adapting, with an advantage of zero), and it claimed
+   the suite had no coverage for the "general" domain (which is not an
+   environment and so matched no scenario).

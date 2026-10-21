@@ -274,10 +274,41 @@ def advise(domain: str = "general", report: Optional[Dict[str, Any]] = None,
         "a cost ceiling: the suite measures prompt volume but not a budget "
         "the agent must stay under",
     ]
+    cal = _calibration_note()
+    if cal:
+        out["calibration"] = cal
     if not covered:
         out["caveats"].append(
             f"the suite has no scenario for the {domain} domain yet")
     return out
+
+
+def _calibration_note() -> Optional[Dict[str, Any]]:
+    """
+    The measured live-vs-simulated gap, if a live validation has been run.
+
+    This is the honest limit on every number in the suite. The simulator is
+    calibrated to the baselines the paper reports, so the suite is comparable
+    to the paper - but a real model may already have mastered a family, and
+    then the headroom the simulator measures there is headroom a real model
+    does not have. The rankings transfer; the magnitudes do not.
+    """
+    import json
+    from pathlib import Path
+    path = Path(__file__).resolve().parent.parent / "data" / "live_validation.json"
+    try:
+        data = json.loads(path.read_text())
+    except Exception:
+        return None
+    return {
+        "summary": (f"the local model scored {data['live_baseline_pct']}% on the "
+                    f"{data['family']} family against the simulator's "
+                    f"{data['simulated_baseline_pct']}% "
+                    f"({data['delta_pp']:+.0f}pp)"),
+        "reading": data.get("reading", ""),
+        "calibration": data.get("calibration", ""),
+        "source": path.name,
+    }
 
 
 def power_report(cells: List[Dict[str, Any]], margin: float = 5.0) -> List[Dict[str, Any]]:
