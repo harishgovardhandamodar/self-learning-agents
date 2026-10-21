@@ -130,6 +130,32 @@
      0.0,
      0.0
     ]
+   },
+   "oracle": {
+    "terminal_advantage": [
+     16.689,
+     6.096
+    ],
+    "average_advantage": [
+     11.319,
+     4.784
+    ],
+    "plasticity": [
+     16.645,
+     6.071
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
    }
   },
   "workflow": {
@@ -238,6 +264,32 @@
     ]
    },
    "scoped": {
+    "terminal_advantage": [
+     16.1,
+     6.781
+    ],
+    "average_advantage": [
+     15.55,
+     5.344
+    ],
+    "plasticity": [
+     16.1,
+     6.781
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "oracle": {
     "terminal_advantage": [
      16.1,
      6.781
@@ -394,6 +446,32 @@
      0.044,
      0.22
     ]
+   },
+   "oracle": {
+    "terminal_advantage": [
+     19.467,
+     6.173
+    ],
+    "average_advantage": [
+     14.718,
+     4.523
+    ],
+    "plasticity": [
+     19.489,
+     6.148
+    ],
+    "stability": [
+     -0.044,
+     0.22
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.044,
+     0.22
+    ]
    }
   },
   "compound": {
@@ -502,6 +580,32 @@
     ]
    },
    "scoped": {
+    "terminal_advantage": [
+     16.667,
+     5.781
+    ],
+    "average_advantage": [
+     11.508,
+     4.427
+    ],
+    "plasticity": [
+     16.65,
+     5.785
+    ],
+    "stability": [
+     -0.017,
+     0.118
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.017,
+     0.118
+    ]
+   },
+   "oracle": {
     "terminal_advantage": [
      16.667,
      5.781
@@ -658,6 +762,32 @@
      0.0,
      0.0
     ]
+   },
+   "oracle": {
+    "terminal_advantage": [
+     36.022,
+     5.798
+    ],
+    "average_advantage": [
+     23.148,
+     4.751
+    ],
+    "plasticity": [
+     35.8,
+     5.768
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
    }
   },
   "trading-drift": {
@@ -790,6 +920,32 @@
      0.133,
      0.483
     ]
+   },
+   "oracle": {
+    "terminal_advantage": [
+     24.822,
+     5.95
+    ],
+    "average_advantage": [
+     15.993,
+     4.197
+    ],
+    "plasticity": [
+     24.822,
+     5.95
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
    }
   },
   "science-drift": {
@@ -898,6 +1054,32 @@
     ]
    },
    "scoped": {
+    "terminal_advantage": [
+     35.967,
+     10.896
+    ],
+    "average_advantage": [
+     26.867,
+     7.676
+    ],
+    "plasticity": [
+     36.3,
+     10.58
+    ],
+    "stability": [
+     -0.4,
+     0.862
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.4,
+     0.862
+    ]
+   },
+   "oracle": {
     "terminal_advantage": [
      35.967,
      10.896
@@ -1054,6 +1236,32 @@
      0.044,
      0.22
     ]
+   },
+   "oracle": {
+    "terminal_advantage": [
+     22.756,
+     5.919
+    ],
+    "average_advantage": [
+     18.844,
+     4.57
+    ],
+    "plasticity": [
+     22.778,
+     5.885
+    ],
+    "stability": [
+     -0.044,
+     0.22
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.044,
+     0.22
+    ]
    }
   },
   "revisit": {
@@ -1162,6 +1370,32 @@
     ]
    },
    "scoped": {
+    "terminal_advantage": [
+     17.467,
+     8.763
+    ],
+    "average_advantage": [
+     14.193,
+     7.946
+    ],
+    "plasticity": [
+     9.133,
+     5.332
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "oracle": {
     "terminal_advantage": [
      17.467,
      8.763
@@ -1318,6 +1552,32 @@
      1.117,
      1.374
     ]
+   },
+   "oracle": {
+    "terminal_advantage": [
+     25.483,
+     5.445
+    ],
+    "average_advantage": [
+     19.504,
+     4.954
+    ],
+    "plasticity": [
+     19.45,
+     5.621
+    ],
+    "stability": [
+     -1.633,
+     1.614
+    ],
+    "interference": [
+     0.517,
+     0.854
+    ],
+    "forgetting": [
+     1.117,
+     1.374
+    ]
    }
   },
   "recurring": {
@@ -1426,6 +1686,32 @@
     ]
    },
    "scoped": {
+    "terminal_advantage": [
+     22.227,
+     6.305
+    ],
+    "average_advantage": [
+     16.291,
+     6.505
+    ],
+    "plasticity": [
+     11.72,
+     3.584
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "oracle": {
     "terminal_advantage": [
      22.227,
      6.305
@@ -1582,6 +1868,32 @@
      0.158,
      0.265
     ]
+   },
+   "oracle": {
+    "terminal_advantage": [
+     20.85,
+     3.434
+    ],
+    "average_advantage": [
+     11.389,
+     2.453
+    ],
+    "plasticity": [
+     20.892,
+     3.443
+    ],
+    "stability": [
+     -0.158,
+     0.265
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.158,
+     0.265
+    ]
    }
   },
   "hard-order": {
@@ -1714,6 +2026,32 @@
      0.022,
      0.11
     ]
+   },
+   "oracle": {
+    "terminal_advantage": [
+     24.678,
+     4.633
+    ],
+    "average_advantage": [
+     13.806,
+     2.864
+    ],
+    "plasticity": [
+     24.656,
+     4.652
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
    }
   },
   "healthcare": {
@@ -1822,6 +2160,32 @@
     ]
    },
    "scoped": {
+    "terminal_advantage": [
+     30.0,
+     13.418
+    ],
+    "average_advantage": [
+     30.0,
+     13.418
+    ],
+    "plasticity": [
+     30.0,
+     13.418
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "oracle": {
     "terminal_advantage": [
      30.0,
      13.418
@@ -1978,6 +2342,32 @@
      0.0,
      0.0
     ]
+   },
+   "oracle": {
+    "terminal_advantage": [
+     20.733,
+     9.483
+    ],
+    "average_advantage": [
+     20.733,
+     9.483
+    ],
+    "plasticity": [
+     20.733,
+     9.483
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
    }
   },
   "sql": {
@@ -2086,6 +2476,32 @@
     ]
    },
    "scoped": {
+    "terminal_advantage": [
+     18.133,
+     12.31
+    ],
+    "average_advantage": [
+     18.133,
+     12.31
+    ],
+    "plasticity": [
+     18.133,
+     12.31
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "oracle": {
     "terminal_advantage": [
      18.133,
      12.31
@@ -2242,6 +2658,32 @@
      0.0,
      0.0
     ]
+   },
+   "oracle": {
+    "terminal_advantage": [
+     0.333,
+     8.116
+    ],
+    "average_advantage": [
+     0.333,
+     8.116
+    ],
+    "plasticity": [
+     0.333,
+     8.116
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
    }
   },
   "science": {
@@ -2350,6 +2792,32 @@
     ]
    },
    "scoped": {
+    "terminal_advantage": [
+     35.533,
+     11.792
+    ],
+    "average_advantage": [
+     35.533,
+     11.792
+    ],
+    "plasticity": [
+     35.533,
+     11.792
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "oracle": {
     "terminal_advantage": [
      35.533,
      11.792

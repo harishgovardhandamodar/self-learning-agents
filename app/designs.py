@@ -179,6 +179,7 @@ EVOLVER_DEFAULTS: Dict[str, Dict[str, Any]] = {
     "gepa": {"max_chars": 1400, "update_every": 5},
     "metaharness": {"min_gain": 0.0},
     "scoped": {"similarity_threshold": 0.0, "max_per_scope": 24, "top_k": 4},
+    "oracle": {"similarity_threshold": 0.0, "max_per_scope": 24, "top_k": 4},
 }
 
 

@@ -912,6 +912,23 @@ async function loadSuiteReport() {
     h += `</table>`;
     host.innerHTML = h + `<p class="hint">${esc(rep.note || "")}</p>`;
 
+    // The ceiling: how much of the achievable gain the best real method got.
+    if (rep.ceiling && rep.ceiling.length) {
+      host.innerHTML += `<h4>How much of the achievable gain was captured</h4>
+        <div class="table-wrap"><table class="cmp">
+        <tr><th>stream</th><th>best real method</th><th>achieved</th><th>ceiling (oracle)</th>
+        <th>captured</th><th>headroom</th></tr>` +
+        rep.ceiling.map((c) => `<tr><td>${esc(c.stream)}</td><td>${esc(c.best_real)}</td>
+          <td>${c.best_mean > 0 ? "+" : ""}${c.best_mean}</td><td>${c.ceiling > 0 ? "+" : ""}${c.ceiling}</td>
+          <td>${c.captured_pct == null ? "–" : c.captured_pct + "%"}</td>
+          <td>${c.headroom_pp == null ? "–" : c.headroom_pp.toFixed(2)}</td></tr>`).join("") +
+        `</table></div>
+        <p class="hint">The ceiling is what perfect scope isolation would deliver -
+          an agent that always knew which family a request belonged to. When a
+          method captures 100% of it, the remaining gap is in the base model's
+          competence, not in the routing.</p>`;
+    }
+
     if (rep.power && rep.power.length) {
       $("s-power").innerHTML = `<table class="cmp"><tr><th>stream</th><th>evolver</th>
         <th>n</th><th>std</th><th>power now</th><th>iterations for 5pp</th></tr>` +

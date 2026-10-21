@@ -234,7 +234,8 @@ def test_benchmarks_endpoint_exposes_bands_and_glossary():
     assert b["scenarios"], "no benchmark scenarios"
     assert "workflow" in b["scenarios"]
     rows = b["scenarios"]["workflow"]["rows"]
-    assert len(rows) == 5
+    # five methods plus the oracle reference ceiling
+    assert len(rows) == 6, [r["evolver"] for r in rows]
     scoped = [r for r in rows if r["evolver"] == "scoped"][0]
     assert scoped["metrics"]["terminal_advantage"]["mean"] > 0
     assert scoped["description"]

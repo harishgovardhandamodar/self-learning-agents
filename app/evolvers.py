@@ -666,6 +666,18 @@ class ScopedEvolver(Evolver):
         self.max_per_scope = int(self.cfg.get("max_per_scope", 24))
         self.top_k = int(self.cfg.get("top_k", 4))
 
+    def _scope_key(self, task, router: Router) -> str:
+        """
+        The scope a task belongs to: the cluster the router discovered, plus
+        the workflow fingerprint.
+
+        This is the one place the scope is decided, so a subclass can
+        replace the information used to derive it without changing anything
+        else about retrieval.
+        """
+        cluster_id, _sim, _ = router.assign(task)
+        return f"{cluster_id}|{probe_workflow(task)}"
+
     async def observe(self, harness: Harness, task, action: Dict[str, Any],
                       success: bool, trace: Dict[str, Any],
                       router: Router) -> Optional[Lesson]:
@@ -673,7 +685,7 @@ class ScopedEvolver(Evolver):
             return None
         cluster_id, sim, _ = router.assign(task)
         fingerprint = probe_workflow(task)
-        scope = f"{cluster_id}|{fingerprint}"
+        scope = self._scope_key(task, router)
         learned = generalize_action(action, task)
         lesson = Lesson(
             id=new_id("L", self.rng),
@@ -724,7 +736,7 @@ class ScopedEvolver(Evolver):
 
     def inject(self, harness: Harness, task, router: Router) -> Injection:
         cluster_id, sim, _ = router.assign(task)
-        scope = router.scope_key(task, cluster_id)
+        scope = self._scope_key(task, router)
         candidates = [l for l in self.lesson_list(harness)
                       if l.env == task.env and l.scope == scope]
         if not candidates:
@@ -764,12 +776,59 @@ class ScopedEvolver(Evolver):
 
 # ------------------------------------------------------------------ helpers
 
+class OracleEvolver(ScopedEvolver):
+    """
+    The ceiling: scope isolation done perfectly.
+
+    Not a competitor - a reference. It files and retrieves lessons by the
+    task's GROUND-TRUTH family, not by the cluster the router discovered,
+    and it matches the intent exactly. So it always knows which family a
+    request belongs to and never picks a rule from the wrong one.
+
+    It gives the suite a scale. If scoped scores +16 and the oracle
+    scores +19, then scoped captures 84% of what perfect scope isolation
+    could deliver, and the remaining 16% is the price of not knowing the
+    answer key. Without a ceiling, "+16" has no scale.
+
+    Note that keying on the intent ALONE is not a ceiling: several
+    families share an intent (the "flat" trading signal appears in the
+    momentum and mean-reversion families), so intent-only retrieval can
+    pick a rule from the wrong family and lose to a properly scoped
+    method. The family has to be known too.
+    """
+
+    id = "oracle"
+    name = "Oracle retrieval (reference ceiling)"
+    paradigm = "experience"
+    surfaces = ["memory", "scoped_sections", "conflict_ledger"]
+    description = ("A reference, not a competitor: files and retrieves by the "
+                   "ground-truth family, so it always knows which family a "
+                   "request belongs to. It bounds what perfect scope isolation "
+                   "could achieve.")
+
+    def _scope_key(self, task, router: Router) -> str:
+        """The scope by the answer key, not by the discovered cluster."""
+        return f"oracle:{task.group}|{probe_workflow(task)}"
+
+    def _oracle_scope(self, task) -> str:
+        return self._scope_key(task, None)
+
+    async def observe(self, harness: Harness, task, action: Dict[str, Any],
+                      success: bool, trace: Dict[str, Any],
+                      router: Router) -> Optional[Lesson]:
+        # The oracle inherits scoped's learning and retrieval exactly; only
+        # the scope KEY differs, so it is a strict superset of the scoped
+        # evolver's information and therefore a true ceiling.
+        return await super().observe(harness, task, action, success, trace, router)
+
+
 EVOLVERS: Dict[str, Any] = {
     "seed": SeedEvolver,
     "reasoningbank": ReasoningBankEvolver,
     "gepa": GEPAEvolver,
     "metaharness": MetaHarnessEvolver,
     "scoped": ScopedEvolver,
+    "oracle": OracleEvolver,
 }
 
 

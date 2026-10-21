@@ -129,6 +129,7 @@ def build_report(cells: List[Dict[str, Any]], metric: str = "terminal_advantage"
                     "guardrails": cell.get("guardrails", {}),
                     "cost": cell.get("cost", {}),
                     "efficiency": cell.get("efficiency", {}),
+                    "is_reference": r["evolver"] == "oracle",
                 }
                 if best_cell is not None and r["evolver"] != best_evolver:
                     cmp = stats_mod.compare_cells(best_cell, cell, metric)
@@ -151,7 +152,7 @@ def build_report(cells: List[Dict[str, Any]], metric: str = "terminal_advantage"
                     row["is_best"] = True
                 rows.append(row)
     rows.sort(key=lambda r: (r["stream"], r["rank"]))
-    return {
+    report = {
         "metric": metric,
         "alpha": alpha,
         "rows": rows,
@@ -160,6 +161,47 @@ def build_report(cells: List[Dict[str, Any]], metric: str = "terminal_advantage"
         "note": ("significance is Holm-corrected across the cells of one stream; "
                  "'significant' means the margin survives the correction"),
     }
+    report["ceiling"] = _ceiling_capture(rows, metric)
+    return report
+
+
+def _ceiling_capture(rows: List[Dict[str, Any]], metric: str) -> List[Dict[str, Any]]:
+    """
+    How much of the achievable gain the best real method captured.
+
+    The oracle row is the ceiling: what perfect scope isolation would
+    deliver. When a method captures 100% of it, the remaining gap to a
+    perfect agent is in the base model's competence, not in the routing -
+    which is a different problem with a different fix.
+    """
+    by_stream: Dict[str, List[Dict[str, Any]]] = {}
+    for r in rows:
+        by_stream.setdefault(r["stream"], []).append(r)
+    out = []
+    for stream, rs in sorted(by_stream.items()):
+        ceiling = next((r for r in rs if r.get("is_reference")), None)
+        if ceiling is None:
+            continue
+        ceil_mean = ceiling["metrics"].get(metric) or 0.0
+        real = [r for r in rs if not r.get("is_reference")
+                and r.get("metrics", {}).get(metric) is not None]
+        if not real:
+            continue
+        best = max(real, key=lambda r: r["metrics"][metric])
+        got = best["metrics"][metric]
+        meaningful = ceil_mean >= 5.0
+        out.append({
+            "stream": stream,
+            "ceiling": round(ceil_mean, 3),
+            "best_real": best["evolver"],
+            "best_mean": round(got, 3),
+            # A capture percentage over a near-zero ceiling is noise: the
+            # ratio is only meaningful when there is a real gain to capture.
+            "captured_pct": round(got / ceil_mean * 100, 1) if (ceil_mean and meaningful) else None,
+            "headroom_pp": round(ceil_mean - got, 3),
+            "meaningful": meaningful,
+        })
+    return out
 
 
 # Which environments a domain's scenarios touch. "general" is not an

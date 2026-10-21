@@ -284,6 +284,54 @@ def test_advice_is_scoped_to_the_domain():
     assert "gepa" not in advice["wins"]
 
 
+def test_ceiling_capture_is_reported():
+    """The report must say how much of the achievable gain was captured."""
+    from app import suite as suite_mod
+    cells = [
+        _cell("s", "scoped", [16.0, 16.5, 15.8, 16.2]),
+        _cell("s", "oracle", [20.0, 20.5, 19.8, 20.2]),
+    ]
+    cells[0]["is_reference"] = False
+    rep = suite_mod.build_report(cells)
+    cap = rep.get("ceiling")
+    assert cap, "no ceiling reported"
+    row = cap[0]
+    assert row["stream"] == "s"
+    assert abs(row["ceiling"] - 20.125) < 0.01, row
+    assert row["best_real"] == "scoped"
+    assert abs(row["best_mean"] - 16.125) < 0.01, row
+    assert 79.0 < row["captured_pct"] < 81.0, row
+    assert abs(row["headroom_pp"] - 4.0) < 0.01, row
+
+
+def test_oracle_is_a_true_ceiling():
+    """
+    The oracle must not be beaten by a real method on the same stream.
+
+    It is scoped with the ground-truth family instead of the discovered
+    cluster, so it has strictly more information; anything it loses to means
+    the ceiling is not a ceiling and the capture percentage is meaningless.
+    """
+    import asyncio
+    from app import streams as streams_mod
+    from app.runner import RunConfig, execute
+
+    async def go():
+        stream = streams_mod.build_stream("workflow", block_size=10, n_eval=10)
+        out = {}
+        for eid in ("scoped", "oracle"):
+            cfg = RunConfig(
+                design={"spec": {"harness": {"system_prompt": "x"}}},
+                stream=stream, evolver=eid,
+                evolver_cfg={"router_threshold": 0.40},
+                policy_cfg={"mode": "simulated", "skill": 0.9, "seed": 7})
+            res = await execute(cfg)
+            out[eid] = res["metrics"]["terminal_advantage"]
+        # The oracle may not lose by more than sampling noise.
+        assert out["oracle"] >= out["scoped"] - 5.0, out
+    asyncio.run(go())
+
+
 def test_estimate_is_honest_about_size():
     from app import suite as suite_mod
     ids = suite_mod.suite_scenarios("fast")

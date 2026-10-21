@@ -95,6 +95,9 @@ EVOLVER_GLOSSARY: Dict[str, str] = {
                    "edit only when it improves validation accuracy.",
     "scoped": "Files lessons per discovered cluster AND per workflow fingerprint, in "
               "append-only sections. Nothing is overwritten, nothing foreign is injected.",
+    "oracle": "A reference, not a competitor: files and retrieves by the ground-truth "
+              "family, so it always knows which family a request belongs to. It bounds "
+              "what perfect scope isolation could achieve.",
 }
 
 # Fallback bands. Regenerated from the sweep; these are the shipped values
