@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# The lab's 20-iteration gate.
+# The lab's 50-iteration gate.
 #
 # Each round:
 #   1. runs the mechanism sweep (scenarios x evolvers x iterations)
 #   2. runs the browser-driven UI audit against the live container
 #   3. checks the measured bands still hold
 #
-# Rounds 1..20. Stops at the first failure and prints what broke, so a
-# regression is caught by the round it appears in, not twenty rounds later.
+# Rounds 1..N (50 by default). Stops at the first failure and prints what
+# broke, so a regression is caught by the round it appears in, not fifty
+# rounds later.
 #
 #   ./tests/iteration_loop.sh [rounds] [iterations-per-cell]
 #
@@ -16,7 +17,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-ROUNDS=${1:-20}
+ROUNDS=${1:-50}
 ITERS=${2:-3}
 BASE=${SLA_URL:-http://localhost:8220}
 AUDIT_OUT=${SLA_AUDIT_OUT:-/tmp/sla_ui_audit}
@@ -42,7 +43,7 @@ for round in $(seq 1 "$ROUNDS"); do
   echo "=============================================================="
 
   python3 -m tests.sweep --iterations "$ITERS" --block 20 --eval 30 --jobs 8 \
-    --scenarios topic,workflow,domain,compound,healthcare-drift,trading-drift,science-drift,domain-workflow,revisit \
+    --scenarios topic,workflow,domain,compound,healthcare-drift,trading-drift,science-drift,domain-workflow,revisit,interleaved,recurring,long-horizon,hard-order \
     --out "/tmp/sla_sweep_r${round}.json" 2>&1 | tail -8
   sweep_rc=$?
   if [ $sweep_rc -ne 0 ]; then

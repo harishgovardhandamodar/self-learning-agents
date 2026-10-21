@@ -84,7 +84,7 @@ const note = (kind, msg, extra = {}) => problems.push({ kind, msg, ...extra });
     await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-${name}.png`), fullPage: true });
   }
 
-  for (const t of ['designs', 'runs', 'compare', 'reference', 'coverage', 'patterns']) await tab(t);
+  for (const t of ['designs', 'runs', 'compare', 'reference', 'coverage', 'suite', 'patterns']) await tab(t);
 
   // ---------------------------------------------- batch launch (core workflow)
   await page.click('nav button[data-tab="runs"]');
@@ -174,6 +174,20 @@ const note = (kind, msg, extra = {}) => problems.push({ kind, msg, ...extra });
   const covSummary = await page.textContent('#cov-summary');
   if (!/families/.test(covSummary || '')) note('ux', 'coverage tab has no summary');
   await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-coverage.png`), fullPage: true });
+
+  // ------------------------------------------------------------ suite tab
+  await page.click('nav button[data-tab="suite"]');
+  await page.waitForTimeout(2000);
+  const suiteEvolvers = await page.$$eval('#s-evolvers input', (els) => els.length);
+  if (suiteEvolvers < 5) note('ux', `suite tab offers only ${suiteEvolvers} evolvers`);
+  // the estimate must state the size of the run before it is launched
+  await page.click('#s-estimate');
+  await page.waitForTimeout(1200);
+  const est = await page.textContent('#s-estimate-out');
+  if (!/runs/.test(est || '')) note('ux', 'the suite cost estimate did not render');
+  const advice = await page.textContent('#s-advice');
+  if (!advice || advice.trim().length < 20) note('ux', 'the suite advice panel is empty');
+  await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-suite.png`), fullPage: true });
 
   // --------------------------------------------------------- reference tab
   await page.click('nav button[data-tab="reference"]');

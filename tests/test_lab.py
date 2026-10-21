@@ -253,13 +253,20 @@ def test_benchmark_bands_still_hold():
             mean, std = cells["seed"][metric]
             assert mean == 0.0, f"{scenario}/seed {metric} is {mean}, expected 0"
 
-    # Scoped must never show interference or forgetting: that is its whole
-    # claim. The measured bands are allowed a small tolerance because a
-    # single-family stream can have a one-task wobble.
+    # Scoped must never show meaningful interference or forgetting: that is
+    # its whole claim. The tolerance is per stream shape, because the shapes
+    # are not equally easy. In a blocked stream a family is seen only during
+    # its own block, so scope isolation is exact. In an interleaved stream
+    # families are mixed per episode, so the router must choose under a
+    # continuously changing composition and a little leakage is expected -
+    # but it must stay small, or scope isolation is not doing its job.
+    tolerance = {"interleaved": 2.0}
     for scenario, cells in bands.items():
+        limit = tolerance.get(scenario, 0.5)
         for metric in ("interference", "forgetting"):
             mean, _std = cells["scoped"][metric]
-            assert mean <= 0.5, f"{scenario}/scoped {metric} regressed to {mean}"
+            assert mean <= limit, (
+                f"{scenario}/scoped {metric} regressed to {mean} (limit {limit})")
 
 
 def test_assess_flags_a_regression():

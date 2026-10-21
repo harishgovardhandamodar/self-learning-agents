@@ -159,6 +159,76 @@ def test_new_metrics_are_present():
     assert len(m["learning_curve"]) == 2  # two block boundaries
 
 
+def test_suite_scenarios_and_estimate():
+    s = client.get("/api/suite/scenarios?scope=all").json()
+    assert len(s["scenarios"]) >= 18
+    ids = {x["id"] for x in s["scenarios"]}
+    for sid in ("interleaved", "recurring", "long-horizon", "hard-order"):
+        assert sid in ids, f"missing stream shape {sid}"
+    est = client.post("/api/suite/estimate", json={
+        "scope": "fast", "evolvers": ["seed", "scoped"], "iterations": 2,
+        "block_size": 5, "n_eval": 5}).json()
+    assert est["runs"] == est["scenarios"] * 2 * 2
+    assert est["training_episodes"] > 0
+
+
+def test_suite_run_launches_a_grid():
+    r = client.post("/api/suite/run", json={
+        "scope": "fast", "evolvers": ["seed", "scoped"], "iterations": 1,
+        "block_size": 3, "n_eval": 3}).json()
+    assert r["count"] == len(r["scenarios"]) * 2
+    ids = [x["run_id"] for x in r["runs"]]
+    for rid in ids[:2]:
+        g = _wait_done(rid)
+        assert g["status"] == "done", g.get("message")
+
+
+def test_suite_run_rejects_bad_input():
+    assert client.post("/api/suite/run", json={
+        "scope": "fast", "evolvers": ["nope"]}).status_code == 400
+    assert client.post("/api/suite/run", json={
+        "scope": "fast", "evolvers": ["seed"], "iterations": 0}).status_code == 400
+
+
+def test_suite_report_has_evidence_for_each_cell():
+    client.post("/api/runs", json={
+        "stream": "workflow", "evolver": "scoped", "policy": "simulated",
+        "block_size": 4, "n_eval": 4}).json()
+    client.post("/api/runs", json={
+        "stream": "workflow", "evolver": "gepa", "policy": "simulated",
+        "block_size": 4, "n_eval": 4}).json()
+    rep = client.get("/api/suite/report").json()
+    assert rep["rows"], "no report rows"
+    row = rep["rows"][0]
+    for key in ("stream", "evolver", "n", "mean", "std", "rank", "metrics"):
+        assert key in row, key
+    others = [r for r in rep["rows"] if not r.get("is_best")]
+    if others:
+        assert "margin_vs_best" in others[0]
+        assert "p_value" in others[0]
+        assert "n_comparisons" in others[0]
+    assert rep.get("power") is not None
+
+
+def test_suite_advice_is_present():
+    a = client.get("/api/suite/advice?domain=healthcare").json()
+    assert a["domain"] == "healthcare"
+    assert a["next_steps"], "advice must say what to do next"
+    assert a["unmeasured"], "advice must say what is not measured"
+
+
+def test_run_reports_cost_and_efficiency():
+    r = client.post("/api/runs", json={
+        "stream": "workflow", "evolver": "reasoningbank", "policy": "simulated",
+        "block_size": 4, "n_eval": 4}).json()
+    g = _wait_done(r["id"])
+    assert g["status"] == "done", g.get("message")
+    c = g["result"].get("cost")
+    e = g["result"].get("efficiency")
+    assert c is not None and "total_units" in c
+    assert e is not None and "gain_pp" in e
+
+
 def test_benchmarks_endpoint_exposes_bands_and_glossary():
     b = client.get("/api/benchmarks").json()
     assert b["scenarios"], "no benchmark scenarios"
