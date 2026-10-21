@@ -66,23 +66,24 @@ per row, so any cell reproduces exactly. Task draws are seed-controlled in
 `RunConfig.seed` (default 7), which is why repeated runs no longer drift
 through uuid randomness.
 
-## The 20-iteration gate
+## The 50-iteration gate
 
-`tests/iteration_loop.sh` runs the whole loop 20 times against the live
+`tests/iteration_loop.sh` runs the whole loop 50 times against the live
 container. Each round: the mechanism sweep, the unit tests, and the
 browser-driven UI audit. It stops at the first failure and names it.
 
 ```bash
 docker compose up -d --build
-./tests/iteration_loop.sh 20 3      # 20 rounds, 3 sweep iterations per cell
+./tests/iteration_loop.sh 50 3     # 50 rounds, 3 sweep iterations per cell
 ```
 
 The UI audit (`tests/ui_audit.js`, Playwright) drives the real dashboard in
 a real browser and fails on: console errors, 4xx/5xx responses, horizontal
 overflow, clipped text, tap targets under 24px, unlabeled form controls, a
-missing focus ring, a nav that wraps on mobile, and any of the three core
+missing focus ring, a nav that wraps on mobile, and any of the core
 workflows breaking (batch launch → finished run, compare → table with
-headers and per-cell summary, design creation → populated spec editor).
+headers and per-cell summary, design creation → populated spec editor,
+suite estimate → a stated run size).
 
 Needs `playwright-core` outside the repo:
 
@@ -122,7 +123,9 @@ python3 -m tests.sweep --iterations 20 --block 20 --eval 30 \
 | `app/designs.py` | Design specs, pattern picker (AI-Agents-Patterns catalog), guardrails, domain playbooks |
 | `app/benchmarks.py` | Measured reference bands (mean ± std per cell) + the metric glossary |
 | `app/flows.py` | Mermaid generators: the agent flow drawn from a design, the stream it faces |
-| `app/stats.py` | Welch t-test, cell ranking, recommendations, suite coverage report |
+| `app/stats.py` | Welch t-test, effect size, Holm correction, power, cell ranking |
+| `app/cost.py` | Prompt/write accounting and the gain-per-unit ledger |
+| `app/suite.py` | Suite runner, the report, and the advice |
 | `app/scaffold.py` | Export a design as a runnable agent project (`exports/`) |
 | `app/main.py` | FastAPI: designs, runs, batch runs, compare, benchmarks, export + the SPA |
 | `web/` | Vanilla-JS frontend (no build step) |
@@ -182,6 +185,10 @@ inside its measured band.
 | `DELETE /api/runs?only_status=` | Bulk cleanup (e.g. `cancelled`, `error`) |
 | `POST /api/compare` | Table-1 rows for a set of runs, with their failure modes |
 | `GET /api/coverage` | What the suite exercises and the combinations it misses |
+| `POST /api/suite/run` | Launch the whole suite (scenarios × evolvers × iterations) as one job |
+| `GET /api/suite/report` | The suite report: rank, effect size, corrected significance, guardrails, cost |
+| `GET /api/suite/advice` | What to do next for a domain, and what is not measured yet |
+| `POST /api/suite/estimate` | What a suite run will cost, before it starts |
 | `GET /api/stats/recommend` | Rank the evolvers for a stream, with a significance test and caveats |
 | `GET /api/stats/compare` | Compare two cells with a confidence interval and p-value |
 | `GET /api/benchmarks` | Measured reference bands + the metric glossary |
@@ -196,8 +203,9 @@ inside its measured band.
 
 ## The evaluation suite
 
-17 scenarios over 13 task families in 5 environments, covering all four
-drift types. `GET /api/coverage` returns the matrix and the remaining gaps.
+21 scenarios over 13 task families in 5 environments, covering all four
+drift types and four stream *shapes*. `GET /api/coverage` returns the
+matrix and the remaining gaps.
 
 | group | scenarios | what it exercises |
 |---|---|---|
@@ -205,6 +213,10 @@ drift types. `GET /api/coverage` returns the matrix and the remaining gaps.
 | **Per-domain drift** | `healthcare-drift`, `trading-drift`, `science-drift` | drift *inside* a regulated domain, where a routine lesson landing on a red-flag case is the failure that matters |
 | **Hard combinations** | `domain-workflow` | an environment change *and* a workflow flip in one stream |
 | | `revisit` | a family seen, then interrupted, then seen again — does competence return? |
+| **Stream shapes** | `interleaved` | families arrive *mixed*, not in blocks — the router must route per request under changing composition, and the memory must hold several families at once |
+| | `recurring` | a family that returns every few blocks — recency as well as scope |
+| | `long-horizon` | eight blocks: does degradation compound with horizon length? |
+| | `hard-order` | the confusable pair adjacent, the hardest family first |
 | **Ordering control** | `topic-order-a/b/c` | the same three databases in three orders — a method that only wins on one ordering has not been shown to be better |
 | **Single-family controls** | `sql`, `toolcall`, `science`, `healthcare`, `trading` | per-environment learning baselines |
 
@@ -224,65 +236,102 @@ Plus a **guardrail audit** on every proposed action: did the agent
 a tool call with a guessed argument? A limit the grader catches is a
 measurement; a limit the agent never proposes is a property.
 
+### Cost
+
+Every run reports what it spent: prompt characters injected, characters
+written, lessons created, lessons actually used, and the hit rate. The
+ledger states the trade plainly — percentage points gained per 100 prompt
+units. A method that buys 2pp while injecting 10× the harness is not the
+method to ship, and the suite now says so.
+
 ### Reading a result
+
+The **Suite** tab runs the whole comparison in one action, reads one
+report, and tells you what to do next.
+
+- `POST /api/suite/run` — launch the whole grid as one job
+- `GET /api/suite/report` — one row per cell: mean ± std, the margin and
+  confidence interval against the best method, the effect size, a
+  significance verdict **after Holm correction for the number of
+  comparisons**, the guardrail violations, and the cost
+- `GET /api/suite/advice` — which evolver to use for a domain, with the
+  caveats, and what the suite does not yet measure
+- `GET /api/suite/estimate` — what a suite run will cost before it starts
 
 `GET /api/stats/recommend?stream=...` ranks the evolvers for a stream with
 a Welch t-test on the margin over the runner-up, and states the caveats
 ("the margin is not significant at 95%", "interference is 12 pp"). The
-**Coverage** tab shows this in the dashboard.
+report also carries a **power** table: how many iterations each cell
+would need to resolve a 5pp margin, so iterations are spent where they
+buy resolution.
 
 ## Key measurements (simulated policy, block 20 / eval 30, 20 iterations)
 
 
-### What the numbers say (20 iterations, block 20 / eval 30, mean ± std)
+### What the numbers say (50 iterations per cell, block 20 / eval 30, mean ± std)
 
 **Workflow drift** (BFCL clarify↔act, one shared API catalogue):
 
 | evolver | Term. | P | I | F |
 |---|---|---|---|---|
-| reasoningbank | +12.1±4.7 | +12.6±4.6 | +12.7±3.8 | +0.5±1.3 |
-| gepa | −11.8±6.0 | +12.4±4.5 | +13.9±4.2 | +24.2±4.6 |
-| metaharness | −5.5±7.2 | −2.7±5.5 | +10.6±7.9 | +2.8±4.3 |
-| scoped | +14.1±5.6 | +14.1±5.6 | 0.0±0.0 | 0.0±0.0 |
+| reasoningbank | +15.7±7.4 | +16.3±7.3 | +12.8±3.9 | +0.6±1.5 |
+| gepa | −10.5±6.0 | +13.8±5.8 | +12.9±4.2 | +24.4±4.6 |
+| metaharness | −4.9±6.5 | −2.2±5.8 | +11.0±6.8 | +2.7±3.7 |
+| scoped | +16.1±6.8 | +16.1±6.8 | 0.0±0.0 | 0.0±0.0 |
 
-**Domain drift with a workflow flip** (the case the original suite never
-had — `domain-workflow`):
+**Interleaved families** (mixed per episode, not in blocks):
 
 | evolver | Term. | P | I | F |
 |---|---|---|---|---|
-| reasoningbank | +19.3±6.6 | +20.1±6.4 | +13.9±3.6 | +1.0±1.6 |
-| gepa | −10.0±4.4 | +18.6±6.2 | +9.8±2.9 | **+28.6±5.0** |
-| metaharness | −5.2±5.4 | −2.7±4.3 | +5.5±3.4 | +3.3±2.8 |
-| scoped | **+22.2±6.5** | +22.3±6.4 | **0.0±0.0** | +0.1±0.3 |
+| reasoningbank | +24.5±5.7 | +16.7±5.3 | +1.3±1.4 | +0.9±1.2 |
+| gepa | +4.1±4.1 | +2.6±5.0 | +1.8±1.3 | +3.5±3.4 |
+| metaharness | −0.8±5.0 | +1.7±5.0 | +3.2±2.7 | +3.0±2.2 |
+| scoped | +25.5±5.4 | +19.4±5.6 | +0.5±0.9 | +1.1±1.4 |
+
+**Recurring family** (returns every few blocks):
+
+| evolver | Term. | P | I | F |
+|---|---|---|---|---|
+| reasoningbank | +21.4±8.0 | +11.3±4.3 | +8.7±2.1 | 0.0±0.1 |
+| gepa | +4.9±4.8 | +8.5±4.0 | +4.6±1.3 | +9.7±3.5 |
+| metaharness | −2.5±3.6 | −0.6±1.8 | +0.3±1.1 | +1.2±1.8 |
+| scoped | +22.2±6.3 | +11.7±3.6 | 0.0±0.0 | 0.0±0.0 |
+
+**Long horizon** (8 blocks, 160 episodes):
+
+| evolver | Term. | P | I | F |
+|---|---|---|---|---|
+| reasoningbank | +20.5±4.2 | +20.5±4.2 | +16.0±2.4 | +0.3±0.5 |
+| gepa | −4.8±2.4 | +17.7±3.5 | +10.6±1.3 | +22.6±3.0 |
+| metaharness | −4.3±2.8 | −1.4±3.1 | +2.3±2.0 | +4.5±1.6 |
+| scoped | +20.9±3.4 | +20.9±3.4 | 0.0±0.0 | +0.2±0.3 |
+
+**Adversarial ordering** (confusable pair adjacent, hardest family first):
+
+| evolver | Term. | P | I | F |
+|---|---|---|---|---|
+| reasoningbank | +23.8±5.0 | +23.9±4.8 | +15.3±2.6 | +0.4±0.7 |
+| gepa | −0.6±2.7 | +24.1±4.2 | +9.9±1.9 | +24.9±3.8 |
+| metaharness | −0.8±4.6 | −0.3±4.3 | +8.6±4.2 | +2.7±1.6 |
+| scoped | +24.8±4.5 | +24.7±4.4 | 0.0±0.0 | 0.0±0.1 |
+
+**Domain shift with a workflow flip** (`domain-workflow`):
+
+| evolver | Term. | P | I | F |
+|---|---|---|---|---|
+| reasoningbank | +20.7±6.8 | +21.3±6.5 | +14.6±3.4 | +0.8±1.5 |
+| gepa | −9.2±4.1 | +20.0±6.2 | +9.4±2.5 | +29.2±4.7 |
+| metaharness | −3.4±5.0 | −0.8±4.4 | +5.3±3.2 | +3.0±2.6 |
+| scoped | +22.8±5.9 | +22.8±5.9 | 0.0±0.0 | 0.0±0.2 |
 
 **Clinical triage drift** (adult → paediatric → mental health):
 
 | evolver | Term. | P | I | F |
 |---|---|---|---|---|
-| reasoningbank | +35.0±6.7 | +34.4±6.8 | +4.8±2.5 | 0.0±0.0 |
-| gepa | +9.7±5.5 | **+37.1±6.8** | +4.9±2.3 | **+27.4±6.1** |
-| metaharness | +4.1±7.3 | +4.3±5.9 | +2.1±2.9 | +1.7±2.2 |
-| scoped | **+36.1±4.3** | +36.1±4.3 | **0.0±0.0** | **0.0±0.0** |
-
-**Trading regime drift** (momentum → macro → mean-reversion, where the
-mean-reversion family is worded like the momentum family and needs the
-opposite action):
-
-| evolver | Term. | P | I | F |
-|---|---|---|---|---|
-| reasoningbank | +25.9±5.9 | +25.8±6.1 | +0.4±1.5 | +0.1±0.2 |
-| gepa | +14.2±5.1 | +23.9±5.9 | +0.8±0.8 | +10.2±4.0 |
-| metaharness | +10.9±4.5 | +10.4±5.1 | +0.4±0.7 | +0.7±1.3 |
-| scoped | +25.3±5.7 | +25.2±6.1 | +0.2±0.6 | +0.1±0.5 |
-
-**Revisit** (a family seen, interrupted, then seen again):
-
-| evolver | Term. | P | I | F |
-|---|---|---|---|---|
-| reasoningbank | +18.9±9.1 | +9.8±5.3 | +9.1±2.8 | 0.0±0.0 |
-| gepa | +6.2±7.0 | +3.7±4.4 | +4.3±1.7 | +2.7±2.4 |
-| metaharness | 0.0±0.0 | 0.0±0.0 | 0.0±0.0 | 0.0±0.0 |
-| scoped | +19.3±9.4 | +10.0±5.7 | 0.0±0.0 | 0.0±0.0 |
+| reasoningbank | +34.1±6.9 | +33.4±7.0 | +4.9±2.5 | +0.1±0.3 |
+| gepa | +8.8±5.1 | **+37.1±7.0** | +5.2±2.9 | **+28.3±6.0** |
+| metaharness | +3.7±7.2 | +3.9±5.8 | +2.2±3.3 | +1.6±2.1 |
+| scoped | **+36.0±5.8** | +35.8±5.8 | **0.0±0.0** | **0.0±0.0** |
 
 ### The readings that need the numbers to be visible
 
@@ -290,15 +339,25 @@ opposite action):
   window distils one lesson per intent into a shared, character-budgeted
   prompt. More rules per flush means more compression churn: GEPA has the
   *highest* plasticity on the domain streams (+37.1 on healthcare-drift)
-  and the *highest* forgetting on every stream (+24 to +29). It is not
-  learning badly; it is trading one for the other.
+  and the *highest* forgetting everywhere (+24 to +29). It is not learning
+  badly; it is trading one for the other. The cost ledger makes the trade
+  explicit: GEPA injects ~3× the prompt volume of scoped for a negative
+  net gain.
+- **The longer the horizon, the worse the shared-prompt methods get.**
+  On `long-horizon` (8 blocks) reasoningbank's interference reaches
+  +16.0 and GEPA's forgetting +22.6, while scoped holds I=0.00, F=0.16.
+  A 4-block stream hid this.
+- **Interleaving is not the same as blocking.** With families mixed per
+  episode, every method's interference drops (nothing is "pre-block" for
+  long) but the ordering of the methods does not change, and scoped still
+  leads on plasticity by ~3pp.
 - **Meta-Harness's zeros are abstention, not competence.** The validation
   gate demands strictly positive gain on a 6-task split, so ties reject.
   The result is stability-by-abstention (often exactly 0.00) rather than
   learning.
-- **Scoped is the only method with I = F = 0 everywhere**, and it keeps the
-  plasticity of the best method in every scenario. That is the paper's
-  claim, reproduced across 17 scenarios.
+- **Scoped is the only method with I = F = 0** on every blocked scenario,
+  and it keeps the best plasticity everywhere. That is the paper's claim,
+  reproduced across 18 scenarios and four stream shapes.
 - **The base rates match the paper**: toolcall-clarify ≈57% (paper 53.8),
   toolcall-act ≈85% (paper 77.3), BIRD-style SQL ≈50% (paper 52.5).
 
