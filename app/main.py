@@ -28,6 +28,7 @@ from . import metrics as metrics_mod
 from . import scaffold as scaffold_mod
 from . import stats as stats_mod
 from . import streams as streams_mod
+from . import suite as suite_mod
 from .evolvers import EVOLVERS
 from .llm import get_client
 from .runner import RunConfig, execute
@@ -109,6 +110,19 @@ class BatchRunIn(BaseModel):
     train_seed_base: int = 100
     eval_seed_base: int = 1100
     run_seed_base: int = 1000
+
+
+class SuiteRunIn(BaseModel):
+    """Launch the whole evaluation suite as one job."""
+    scope: str = "core"                 # all | core | fast
+    scenarios: List[str] = Field(default_factory=list)
+    evolvers: List[str] = Field(default_factory=lambda: ["seed", "reasoningbank",
+                                                          "gepa", "metaharness", "scoped"])
+    iterations: int = 5
+    block_size: int = 20
+    n_eval: int = 30
+    policy: str = "simulated"
+    name: str = ""
 
 
 class ExportIn(BaseModel):
@@ -333,6 +347,8 @@ async def _execute_and_store(run_id: str, cfg: RunConfig) -> None:
                            "attribution": res.get("attribution", {}),
                            "router": res.get("router", {}),
                            "guardrails": res.get("guardrails", {}),
+                           "cost": res.get("cost", {}),
+                           "efficiency": res.get("efficiency", {}),
                            "elapsed_s": res.get("elapsed_s"),
                        }))
     except asyncio.CancelledError:
@@ -586,6 +602,9 @@ def _cell_summary() -> Dict[str, Any]:
             "stream": r.get("stream_id"), "evolver": r.get("evolver"),
             "n": 0, "run_ids": [],
             "metrics": {k: {"values": [], "n": 0} for k in metrics},
+            "guardrail_violations": 0,
+            "cost_values": [],
+            "efficiency_values": [],
         })
         cell["n"] += 1
         cell["run_ids"].append(r["id"])
@@ -593,6 +612,14 @@ def _cell_summary() -> Dict[str, Any]:
             v = m.get(k)
             if isinstance(v, (int, float)):
                 cell["metrics"][k]["values"].append(float(v))
+        gr = env.get("guardrails") or {}
+        cell["guardrail_violations"] += int(gr.get("total", 0) or 0)
+        c = env.get("cost") or {}
+        if c:
+            cell["cost_values"].append(c)
+        e = env.get("efficiency") or {}
+        if e:
+            cell["efficiency_values"].append(e)
     # add the summary stats the UI wants
     for cell in cells.values():
         for k, d in cell["metrics"].items():
@@ -606,7 +633,141 @@ def _cell_summary() -> Dict[str, Any]:
             else:
                 d["mean"] = 0.0
                 d["std"] = 0.0
+        # mean cost across the cell's runs
+        cv = cell.pop("cost_values", [])
+        ev = cell.pop("efficiency_values", [])
+        if cv:
+            cell["cost"] = {k: round(sum(float(c.get(k, 0) or 0) for c in cv) / len(cv), 3)
+                             for k in ("prompt_units", "write_units", "total_units",
+                                       "lessons_created", "lesson_hit_rate",
+                                       "unused_lessons", "lessons_per_episode")}
+        if ev:
+            gains = [float(e.get("gain_pp", 0) or 0) for e in ev]
+            ppu = [e.get("pp_per_100_units") for e in ev
+                   if e.get("pp_per_100_units") is not None]
+            cell["efficiency"] = {
+                "gain_pp": round(sum(gains) / len(gains), 3) if gains else 0.0,
+                "total_units": round(sum(float(e.get("total_units", 0) or 0)
+                                         for e in ev) / len(ev), 3),
+                "pp_per_100_units": round(sum(ppu) / len(ppu), 3) if ppu else None,
+            }
+        cell["guardrails"] = {"total": cell.pop("guardrail_violations", 0)}
     return cells
+
+
+@app.get("/api/suite/scenarios")
+async def suite_scenarios(scope: str = "all") -> Dict[str, Any]:
+    """The scenarios a suite run covers, and what it will cost."""
+    ids = suite_mod.suite_scenarios(scope)
+    out = []
+    for sid in ids:
+        meta = streams_mod.SCENARIOS.get(sid, {})
+        out.append({
+            "id": sid, "name": meta.get("name", sid),
+            "description": meta.get("description", ""),
+            "drift": meta.get("drift", ""),
+            "order": meta.get("order", "blocked"),
+            "groups": meta.get("groups", []),
+        })
+    return {"scenarios": out, "scope": scope}
+
+
+@app.post("/api/suite/estimate")
+async def suite_estimate(body: SuiteRunIn) -> Dict[str, Any]:
+    """What a suite run will cost, before it is launched."""
+    ids = body.scenarios or suite_mod.suite_scenarios(body.scope)
+    return suite_mod.estimate_cost(ids, body.evolvers, body.iterations,
+                                   body.block_size, body.n_eval)
+
+
+@app.post("/api/suite/run")
+async def suite_run(body: SuiteRunIn) -> Dict[str, Any]:
+    """
+    Launch the whole suite as one job.
+
+    The unit of work in this lab is a comparison, and comparing across the
+    suite is 21 scenarios x 5 evolvers x N iterations. Doing that by hand
+    was the workflow gap; this launches the whole grid in one call, with
+    per-run progress.
+    """
+    ids = body.scenarios or suite_mod.suite_scenarios(body.scope)
+    unknown = [e for e in body.evolvers if e not in EVOLVERS]
+    if unknown:
+        raise HTTPException(400, f"unknown evolver(s): {', '.join(unknown)}")
+    if not ids:
+        raise HTTPException(400, "no scenarios selected")
+    if body.iterations < 1 or body.iterations > 100:
+        raise HTTPException(400, "iterations must be between 1 and 100")
+    if body.policy == "live" and await _llm_or_400() is None:
+        raise HTTPException(400, "no model backend reachable "
+                                 "(fox-services :8210 or Ollama :11434)")
+
+    created = []
+    for sid in ids:
+        for evolver in body.evolvers:
+            for i in range(body.iterations):
+                stream = _prepare(sid, body.block_size, body.n_eval,
+                                  100 + i, 1100 + i)
+                run_id = f"run_{uuid.uuid4().hex[:10]}"
+                label = body.name or f"{sid}/{evolver}"
+                if body.iterations > 1:
+                    label += f" #{i + 1}"
+                db.create_run(run_id, "", label, sid, evolver, body.policy, "", {
+                    "evolver_cfg": {"router_threshold": 0.40,
+                                    **designs_mod.EVOLVER_DEFAULTS.get(evolver, {})},
+                    "policy_cfg": {"mode": body.policy, "seed": 7 + i},
+                    "block_size": body.block_size, "n_eval": body.n_eval,
+                    "train_seed": 100 + i, "eval_seed": 1100 + i,
+                    "iteration": i, "suite_scope": body.scope,
+                })
+                cfg = RunConfig(design={"spec": {}}, stream=stream,
+                                evolver=evolver,
+                                evolver_cfg={"router_threshold": 0.40,
+                                             **designs_mod.EVOLVER_DEFAULTS.get(evolver, {})},
+                                policy_cfg={"mode": body.policy, "seed": 7 + i},
+                                seed=1000 + i)
+                _spawn(run_id, cfg)
+                created.append({"run_id": run_id, "stream": sid,
+                                "evolver": evolver, "iteration": i})
+    return {"runs": created, "count": len(created), "scenarios": ids,
+            "iterations": body.iterations}
+
+
+@app.get("/api/suite/report")
+async def suite_report(stream: str = "", metric: str = "terminal_advantage",
+                       alpha: float = 0.05) -> Dict[str, Any]:
+    """
+    The suite report: one row per cell, with the evidence for its rank.
+
+    Mean and spread, the effect size against the best cell, a significance
+    verdict that accounts for the number of comparisons, guardrail
+    violations and the cost of what was bought.
+    """
+    cells = _cell_summary()
+    rows = list(cells.values())
+    if stream:
+        rows = [c for c in rows if c.get("stream") == stream]
+    if not rows:
+        return {"rows": [], "streams": [], "cells": 0,
+                "note": "no finished runs yet — launch a suite or a comparison first"}
+    report = suite_mod.build_report(rows, metric, alpha)
+    report["power"] = suite_mod.power_report(rows)
+    return report
+
+
+@app.get("/api/suite/advice")
+async def suite_advice(domain: str = "general",
+                       metric: str = "terminal_advantage") -> Dict[str, Any]:
+    """
+    What to do next for a given domain.
+
+    Derived from the measured report rather than asserted: which evolver
+    leads on this domain's scenarios, what the caveats are, and what the
+    suite does not yet measure.
+    """
+    cells = list(_cell_summary().values())
+    report = suite_mod.build_report(cells, metric) if cells else {"rows": []}
+    return suite_mod.advise(domain, report)
 
 
 @app.get("/api/runs/summary")

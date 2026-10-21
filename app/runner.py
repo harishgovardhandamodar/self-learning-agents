@@ -19,8 +19,9 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
+from . import cost as cost_mod
 from . import envs, metrics as metrics_mod
-from .evolvers import Evolver, get_evolver
+from .evolvers import Evolver, Lesson, get_evolver
 from .harness import Harness, new_id, seed_harness
 from .policy import PolicyResult, build_policy
 from .retrieval import Router
@@ -70,6 +71,7 @@ def default_system_prompt() -> str:
 
 async def _eval_group(harness: Harness, group: envs.TaskGroup, tasks: List[envs.Task],
                        evolver: Evolver, policy, router: Router,
+                       cost: Optional[Dict[str, Any]] = None,
                        ) -> Dict[str, Any]:
     """Evaluate a frozen harness on one family's hold-out set."""
     correct = 0
@@ -90,6 +92,10 @@ async def _eval_group(harness: Harness, group: envs.TaskGroup, tasks: List[envs.
         if bad:
             violations.append({"group": group.id, "violations": bad,
                                "intent": (result.trace or {}).get("intent", "")})
+        if cost is not None:
+            used = bool((result.trace or {}).get("governed_by")) and \
+                (result.trace or {}).get("governed_by") != "prior"
+            cost_mod.account_episode(cost, inj, used)
         events.append({
             "t": None, "group": group.id, "source": inj.source, "owner": owner,
             "similarity": inj.similarity, "success": detail["success"],
@@ -137,6 +143,7 @@ async def execute(cfg: RunConfig, on_progress: ProgressCb = None,
     all_events: List[Dict[str, Any]] = []
     all_violations: List[Dict[str, Any]] = []
     train_log: List[Dict[str, Any]] = []
+    cost = cost_mod.empty_cost()
     started = time.time()
 
     def report(phase: str, done: int, total: int, message: str = "") -> None:
@@ -149,7 +156,7 @@ async def execute(cfg: RunConfig, on_progress: ProgressCb = None,
     # ---------------------------------------------------- seed checkpoint
     report("seed-eval", 0, 1, "evaluating the seed harness")
     seed_metrics, seed_events, seed_violations = await _eval_all(
-        harness, evolver, policy, router, eval_tasks, stream.groups)
+        harness, evolver, policy, router, eval_tasks, stream.groups, cost)
     all_events.extend(seed_events)
     all_violations.extend(seed_violations)
     checkpoints.append({
@@ -183,6 +190,9 @@ async def execute(cfg: RunConfig, on_progress: ProgressCb = None,
         success = detail["success"]
 
         await evolver.observe(harness, task, result.action, success, result.trace, router)
+        if success:
+            # Account what the harness had to write to keep this lesson.
+            cost_mod.account_lesson(cost, _last_lesson_of(harness), harness)
 
         if len(train_log) < 400:
             train_log.append({
@@ -208,7 +218,7 @@ async def execute(cfg: RunConfig, on_progress: ProgressCb = None,
             done += 1
             report("eval", done, total, f"evaluating checkpoint at t={t}")
             cp_metrics, cp_events, cp_violations = await _eval_all(
-                harness, evolver, policy, router, eval_tasks, stream.groups)
+                harness, evolver, policy, router, eval_tasks, stream.groups, cost)
             all_events.extend(cp_events)
             all_violations.extend(cp_violations)
             checkpoints.append({
@@ -224,6 +234,8 @@ async def execute(cfg: RunConfig, on_progress: ProgressCb = None,
     attribution = metrics_mod.prompt_attribution(checkpoints)
     failures = metrics_mod.detect_failure_modes(m, retrieval, attribution)
     guardrails = _guardrail_summary(all_violations)
+    cost_out = cost_mod.finalise(cost)
+    ledger = cost_mod.efficiency_ledger(cost_out, m.get("terminal_advantage", 0.0))
 
     return {
         "cancelled": False,
@@ -233,6 +245,8 @@ async def execute(cfg: RunConfig, on_progress: ProgressCb = None,
         "attribution": attribution,
         "failure_modes": failures,
         "guardrails": guardrails,
+        "cost": cost_out,
+        "efficiency": ledger,
         "train_log": train_log,
         "router": router.state(),
         "final_snapshot": harness.snapshot(),
@@ -240,6 +254,12 @@ async def execute(cfg: RunConfig, on_progress: ProgressCb = None,
         "policy": cfg.policy_mode,
         "model": (cfg.policy_cfg or {}).get("model", ""),
     }
+
+
+def _last_lesson_of(harness: Harness) -> Any:
+    """The most recent lesson the harness recorded, if any."""
+    idx = harness.lesson_index or []
+    return Lesson.from_dict(idx[-1]) if idx else None
 
 
 def _guardrail_summary(violations: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -262,7 +282,8 @@ def _guardrail_summary(violations: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 async def _eval_all(harness: Harness, evolver: Evolver, policy, router: Router,
                     eval_tasks: Dict[str, List[envs.Task]],
-                    groups: List[str]) -> tuple:
+                    groups: List[str],
+                    cost: Optional[Dict[str, Any]] = None) -> tuple:
     """Evaluate a frozen harness on every family's hold-out set."""
     # Evaluate against a COPY of the router: a hold-out query must not be
     # allowed to reshape the agent's own routing.
@@ -272,7 +293,7 @@ async def _eval_all(harness: Harness, evolver: Evolver, policy, router: Router,
     violations: List[Dict[str, Any]] = []
     for g in groups:
         res = await _eval_group(harness, envs.get_group(g), eval_tasks.get(g, []),
-                                evolver, policy, eval_router)
+                                evolver, policy, eval_router, cost)
         metrics[g] = res["accuracy"]
         events.extend(res["events"])
         violations.extend(res["violations"])
