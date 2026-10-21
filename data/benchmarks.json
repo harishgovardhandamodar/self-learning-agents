@@ -1,0 +1,1465 @@
+{
+ "bands": {
+  "topic": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     17.667,
+     6.407
+    ],
+    "average_advantage": [
+     6.685,
+     5.211
+    ],
+    "plasticity": [
+     17.556,
+     6.384
+    ],
+    "stability": [
+     -11.944,
+     3.379
+    ],
+    "interference": [
+     11.944,
+     3.379
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     -6.667,
+     4.341
+    ],
+    "average_advantage": [
+     -6.148,
+     3.134
+    ],
+    "plasticity": [
+     10.778,
+     5.074
+    ],
+    "stability": [
+     -27.917,
+     4.491
+    ],
+    "interference": [
+     10.472,
+     3.45
+    ],
+    "forgetting": [
+     17.444,
+     3.607
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     18.611,
+     5.382
+    ],
+    "average_advantage": [
+     12.852,
+     4.264
+    ],
+    "plasticity": [
+     18.556,
+     5.348
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "workflow": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     12.083,
+     4.679
+    ],
+    "average_advantage": [
+     6.583,
+     4.117
+    ],
+    "plasticity": [
+     12.583,
+     4.572
+    ],
+    "stability": [
+     -13.167,
+     4.043
+    ],
+    "interference": [
+     12.667,
+     3.762
+    ],
+    "forgetting": [
+     0.5,
+     1.336
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     -11.75,
+     6.033
+    ],
+    "average_advantage": [
+     -5.5,
+     4.059
+    ],
+    "plasticity": [
+     12.417,
+     4.507
+    ],
+    "stability": [
+     -38.083,
+     4.753
+    ],
+    "interference": [
+     13.917,
+     4.233
+    ],
+    "forgetting": [
+     24.167,
+     4.604
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -5.5,
+     7.176
+    ],
+    "average_advantage": [
+     -5.167,
+     6.492
+    ],
+    "plasticity": [
+     -2.667,
+     5.525
+    ],
+    "stability": [
+     -13.417,
+     10.781
+    ],
+    "interference": [
+     10.583,
+     7.934
+    ],
+    "forgetting": [
+     2.833,
+     4.295
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     14.083,
+     5.606
+    ],
+    "average_advantage": [
+     13.917,
+     3.928
+    ],
+    "plasticity": [
+     14.083,
+     5.606
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "domain": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     17.889,
+     7.343
+    ],
+    "average_advantage": [
+     7.519,
+     5.914
+    ],
+    "plasticity": [
+     17.833,
+     7.427
+    ],
+    "stability": [
+     -13.778,
+     2.96
+    ],
+    "interference": [
+     13.667,
+     2.886
+    ],
+    "forgetting": [
+     0.111,
+     0.342
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     -1.833,
+     3.954
+    ],
+    "average_advantage": [
+     -1.241,
+     3.111
+    ],
+    "plasticity": [
+     14.778,
+     6.287
+    ],
+    "stability": [
+     -24.083,
+     5.941
+    ],
+    "interference": [
+     7.306,
+     2.936
+    ],
+    "forgetting": [
+     16.778,
+     5.845
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -2.5,
+     4.398
+    ],
+    "average_advantage": [
+     -2.407,
+     4.283
+    ],
+    "plasticity": [
+     -2.667,
+     4.566
+    ],
+    "stability": [
+     -1.917,
+     3.114
+    ],
+    "interference": [
+     1.861,
+     3.023
+    ],
+    "forgetting": [
+     0.056,
+     0.248
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     20.5,
+     6.08
+    ],
+    "average_advantage": [
+     14.926,
+     4.696
+    ],
+    "plasticity": [
+     20.611,
+     6.005
+    ],
+    "stability": [
+     -0.111,
+     0.342
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.111,
+     0.342
+    ]
+   }
+  },
+  "compound": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     17.0,
+     7.058
+    ],
+    "average_advantage": [
+     4.729,
+     5.771
+    ],
+    "plasticity": [
+     17.125,
+     6.996
+    ],
+    "stability": [
+     -13.951,
+     2.643
+    ],
+    "interference": [
+     13.66,
+     2.733
+    ],
+    "forgetting": [
+     0.292,
+     0.559
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     -8.208,
+     2.639
+    ],
+    "average_advantage": [
+     -5.5,
+     1.734
+    ],
+    "plasticity": [
+     12.25,
+     4.935
+    ],
+    "stability": [
+     -29.882,
+     3.762
+    ],
+    "interference": [
+     9.424,
+     1.545
+    ],
+    "forgetting": [
+     20.458,
+     3.828
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -5.208,
+     4.342
+    ],
+    "average_advantage": [
+     -2.583,
+     2.068
+    ],
+    "plasticity": [
+     -1.458,
+     3.093
+    ],
+    "stability": [
+     -5.611,
+     3.338
+    ],
+    "interference": [
+     1.861,
+     0.946
+    ],
+    "forgetting": [
+     3.75,
+     2.67
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     17.667,
+     6.163
+    ],
+    "average_advantage": [
+     12.792,
+     4.749
+    ],
+    "plasticity": [
+     17.625,
+     6.143
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "healthcare-drift": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     35.0,
+     6.72
+    ],
+    "average_advantage": [
+     20.518,
+     5.647
+    ],
+    "plasticity": [
+     34.444,
+     6.773
+    ],
+    "stability": [
+     -4.806,
+     2.532
+    ],
+    "interference": [
+     4.806,
+     2.532
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     9.667,
+     5.516
+    ],
+    "average_advantage": [
+     7.796,
+     4.27
+    ],
+    "plasticity": [
+     37.111,
+     6.815
+    ],
+    "stability": [
+     -32.361,
+     5.756
+    ],
+    "interference": [
+     4.917,
+     2.317
+    ],
+    "forgetting": [
+     27.444,
+     6.087
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     4.055,
+     7.32
+    ],
+    "average_advantage": [
+     1.148,
+     3.983
+    ],
+    "plasticity": [
+     4.333,
+     5.933
+    ],
+    "stability": [
+     -3.722,
+     3.184
+    ],
+    "interference": [
+     2.056,
+     2.85
+    ],
+    "forgetting": [
+     1.667,
+     2.237
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     36.056,
+     4.333
+    ],
+    "average_advantage": [
+     23.037,
+     3.544
+    ],
+    "plasticity": [
+     36.056,
+     4.333
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "trading-drift": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     25.944,
+     5.882
+    ],
+    "average_advantage": [
+     19.981,
+     4.609
+    ],
+    "plasticity": [
+     25.833,
+     6.063
+    ],
+    "stability": [
+     -0.444,
+     1.504
+    ],
+    "interference": [
+     0.389,
+     1.498
+    ],
+    "forgetting": [
+     0.056,
+     0.248
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     14.167,
+     5.071
+    ],
+    "average_advantage": [
+     11.296,
+     3.527
+    ],
+    "plasticity": [
+     23.944,
+     5.907
+    ],
+    "stability": [
+     -10.917,
+     3.95
+    ],
+    "interference": [
+     0.75,
+     0.791
+    ],
+    "forgetting": [
+     10.167,
+     3.97
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     10.945,
+     4.492
+    ],
+    "average_advantage": [
+     7.333,
+     4.285
+    ],
+    "plasticity": [
+     10.389,
+     5.102
+    ],
+    "stability": [
+     -1.083,
+     1.627
+    ],
+    "interference": [
+     0.361,
+     0.657
+    ],
+    "forgetting": [
+     0.722,
+     1.263
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     25.333,
+     5.729
+    ],
+    "average_advantage": [
+     17.444,
+     3.929
+    ],
+    "plasticity": [
+     25.167,
+     6.11
+    ],
+    "stability": [
+     -0.278,
+     0.775
+    ],
+    "interference": [
+     0.167,
+     0.627
+    ],
+    "forgetting": [
+     0.111,
+     0.497
+    ]
+   }
+  },
+  "science-drift": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     37.417,
+     9.86
+    ],
+    "average_advantage": [
+     24.75,
+     7.21
+    ],
+    "plasticity": [
+     36.333,
+     10.111
+    ],
+    "stability": [
+     -4.917,
+     1.91
+    ],
+    "interference": [
+     4.833,
+     1.785
+    ],
+    "forgetting": [
+     0.083,
+     0.373
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     10.667,
+     8.296
+    ],
+    "average_advantage": [
+     9.833,
+     4.975
+    ],
+    "plasticity": [
+     33.25,
+     8.942
+    ],
+    "stability": [
+     -29.0,
+     7.597
+    ],
+    "interference": [
+     6.417,
+     3.718
+    ],
+    "forgetting": [
+     22.583,
+     5.339
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -3.167,
+     6.28
+    ],
+    "average_advantage": [
+     -3.0,
+     4.032
+    ],
+    "plasticity": [
+     -1.25,
+     4.389
+    ],
+    "stability": [
+     -4.583,
+     5.126
+    ],
+    "interference": [
+     2.25,
+     3.516
+    ],
+    "forgetting": [
+     2.333,
+     3.877
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     36.5,
+     12.054
+    ],
+    "average_advantage": [
+     27.167,
+     8.62
+    ],
+    "plasticity": [
+     36.667,
+     11.66
+    ],
+    "stability": [
+     -0.333,
+     0.872
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.333,
+     0.872
+    ]
+   }
+  },
+  "domain-workflow": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     19.278,
+     6.591
+    ],
+    "average_advantage": [
+     9.407,
+     6.001
+    ],
+    "plasticity": [
+     20.056,
+     6.362
+    ],
+    "stability": [
+     -14.917,
+     4.197
+    ],
+    "interference": [
+     13.917,
+     3.607
+    ],
+    "forgetting": [
+     1.0,
+     1.608
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     -10.0,
+     4.371
+    ],
+    "average_advantage": [
+     -3.111,
+     3.757
+    ],
+    "plasticity": [
+     18.611,
+     6.222
+    ],
+    "stability": [
+     -38.389,
+     5.493
+    ],
+    "interference": [
+     9.778,
+     2.869
+    ],
+    "forgetting": [
+     28.611,
+     5.045
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -5.222,
+     5.409
+    ],
+    "average_advantage": [
+     -3.981,
+     3.83
+    ],
+    "plasticity": [
+     -2.667,
+     4.256
+    ],
+    "stability": [
+     -8.861,
+     4.954
+    ],
+    "interference": [
+     5.528,
+     3.408
+    ],
+    "forgetting": [
+     3.333,
+     2.792
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     22.167,
+     6.453
+    ],
+    "average_advantage": [
+     18.574,
+     5.188
+    ],
+    "plasticity": [
+     22.278,
+     6.403
+    ],
+    "stability": [
+     -0.111,
+     0.342
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.111,
+     0.342
+    ]
+   }
+  },
+  "revisit": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     18.889,
+     9.12
+    ],
+    "average_advantage": [
+     12.741,
+     9.646
+    ],
+    "plasticity": [
+     9.778,
+     5.306
+    ],
+    "stability": [
+     -9.111,
+     2.829
+    ],
+    "interference": [
+     9.111,
+     2.829
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     6.167,
+     7.05
+    ],
+    "average_advantage": [
+     2.648,
+     4.38
+    ],
+    "plasticity": [
+     3.667,
+     4.446
+    ],
+    "stability": [
+     -7.0,
+     2.997
+    ],
+    "interference": [
+     4.333,
+     1.687
+    ],
+    "forgetting": [
+     2.667,
+     2.375
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     19.333,
+     9.369
+    ],
+    "average_advantage": [
+     15.667,
+     8.867
+    ],
+    "plasticity": [
+     10.0,
+     5.688
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "healthcare": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     28.167,
+     16.489
+    ],
+    "average_advantage": [
+     28.167,
+     16.489
+    ],
+    "plasticity": [
+     28.167,
+     16.489
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     30.5,
+     13.257
+    ],
+    "average_advantage": [
+     30.5,
+     13.257
+    ],
+    "plasticity": [
+     30.5,
+     13.257
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -1.333,
+     4.104
+    ],
+    "average_advantage": [
+     -1.333,
+     4.104
+    ],
+    "plasticity": [
+     -1.333,
+     4.104
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     29.667,
+     13.972
+    ],
+    "average_advantage": [
+     29.667,
+     13.972
+    ],
+    "plasticity": [
+     29.667,
+     13.972
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "trading": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     20.833,
+     10.08
+    ],
+    "average_advantage": [
+     20.833,
+     10.08
+    ],
+    "plasticity": [
+     20.833,
+     10.08
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     19.333,
+     11.166
+    ],
+    "average_advantage": [
+     19.333,
+     11.166
+    ],
+    "plasticity": [
+     19.333,
+     11.166
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     1.667,
+     6.534
+    ],
+    "average_advantage": [
+     1.667,
+     6.534
+    ],
+    "plasticity": [
+     1.667,
+     6.534
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     21.0,
+     9.247
+    ],
+    "average_advantage": [
+     21.0,
+     9.247
+    ],
+    "plasticity": [
+     21.0,
+     9.247
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   }
+  }
+ },
+ "notes": {
+  "workflow": "Two BFCL families share one API catalogue; the correct workflow flips between blocks. This is the paper's retrieval-collision case.",
+  "topic": "Three SQL databases in sequence. Same task, different schema.",
+  "domain": "The environment itself changes: science lab, then tool use, then SQL.",
+  "compound": "Topic, domain and workflow shifts in sequence over the longest horizon.",
+  "healthcare": "Single-family triage stream. High variance: read the std before trusting a single number.",
+  "trading": "Single-family signal stream. High variance (ceiling effects): read the std before trusting a single number."
+ },
+ "source": "measured sweep: 20 iterations per cell, block 20, eval 30"
+}
