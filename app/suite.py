@@ -162,6 +162,30 @@ def build_report(cells: List[Dict[str, Any]], metric: str = "terminal_advantage"
     }
 
 
+# Which environments a domain's scenarios touch. "general" is not an
+# environment, so it is mapped to the non-regulated ones: a generic agent
+# works with SQL, tool calls and instruments.
+DOMAIN_ENVS: Dict[str, List[str]] = {
+    "healthcare": ["healthcare"],
+    "trading": ["trading"],
+    "finance": ["trading", "sql", "toolcall"],
+    "general": ["sql", "toolcall", "science"],
+}
+
+
+def domain_scenarios(domain: str) -> List[str]:
+    """The scenarios that exercise a domain."""
+    from . import envs, streams as streams_mod
+    wanted = set(DOMAIN_ENVS.get(domain.lower(), [domain.lower()]))
+    out = []
+    for sid, meta in streams_mod.SCENARIOS.items():
+        envs_in = {envs.get_group(g).env for g in meta.get("groups", [])
+                   if envs.get_group(g)}
+        if envs_in & wanted:
+            out.append(sid)
+    return out
+
+
 def advise(domain: str = "general", report: Optional[Dict[str, Any]] = None,
            scenarios: Optional[List[str]] = None) -> Dict[str, Any]:
     """
@@ -175,47 +199,50 @@ def advise(domain: str = "general", report: Optional[Dict[str, Any]] = None,
 
     if report is None:
         report = {"rows": []}
-    rows = [r for r in report.get("rows", [])]
-    if scenarios:
-        rows = [r for r in rows if r.get("stream") in scenarios]
-
-    # The scenarios that touch this domain.
-    dom_scenarios = []
-    for sid, meta in streams_mod.SCENARIOS.items():
-        envs_in = {envs.get_group(g).env for g in meta.get("groups", [])
-                   if envs.get_group(g)}
-        if domain.lower() in envs_in:
-            dom_scenarios.append(sid)
+    dom_scenarios = domain_scenarios(domain)
+    # The recommendation is about THIS domain: a method that wins on
+    # healthcare streams and loses on trading is not the healthcare answer.
+    scope = scenarios if scenarios is not None else dom_scenarios
+    rows = [r for r in report.get("rows", []) if r.get("stream") in scope] \
+        if scope else list(report.get("rows", []))
 
     out: Dict[str, Any] = {
         "domain": domain,
         "domain_scenarios": dom_scenarios,
+        "scoped_to_domain": bool(scope),
         "recommendation": None,
         "caveats": [],
         "next_steps": [],
         "unmeasured": [],
+        "wins": {},
     }
 
     if rows:
         by_stream: Dict[str, List[Dict[str, Any]]] = {}
         for r in rows:
             by_stream.setdefault(r["stream"], []).append(r)
-        # Rank the evolvers by how often they win, then by mean advantage.
         wins: Dict[str, int] = {}
         means: Dict[str, List[float]] = {}
         for rs in by_stream.values():
             top = min(rs, key=lambda r: r["rank"])
-            wins[top["evolver"]] = wins.get(top["evolver"], 0) + 1
+            # A "win" has to be a win: the method must have actually learned
+            # something. The seed harness wins by not adapting, and its
+            # advantage is 0 - that is a floor, not a win.
+            top_gain = (top.get("metrics") or {}).get(
+                report.get("metric", "terminal_advantage")) or 0.0
+            if top_gain > 0.5:
+                wins[top["evolver"]] = wins.get(top["evolver"], 0) + 1
             for r in rs:
-                m = r.get("metrics", {}).get(report.get("metric", "terminal_advantage"))
+                m = (r.get("metrics") or {}).get(report.get("metric", "terminal_advantage"))
                 if m is not None:
                     means.setdefault(r["evolver"], []).append(m)
         scored = sorted(
             wins.items(),
             key=lambda kv: (-kv[1], -(sum(means.get(kv[0], [0])) /
                               max(1, len(means.get(kv[0], [1]))))))
-        out["recommendation"] = scored[0][0] if scored else None
-        out["wins"] = dict(wins)
+        if scored:
+            out["recommendation"] = scored[0][0]
+        out["wins"] = wins
 
         best_rows = [r for r in rows if r.get("is_best")]
         for r in best_rows:
@@ -240,19 +267,13 @@ def advise(domain: str = "general", report: Optional[Dict[str, Any]] = None,
         ]
 
     # What the suite does not measure for this domain yet.
-    covered = {s for s in dom_scenarios}
-    if domain.lower() in ("healthcare", "trading", "finance", "general", "science"):
-        out["unmeasured"] = [
-            "live-mode validation: every number in the suite comes from the "
-            "simulated policy, so the ranking is unconfirmed against a real model",
-            "a cost ceiling: the suite measures prompt volume but not a budget "
-            "the agent must stay under",
-        ]
-    else:
-        out["unmeasured"] = [
-            f"no scenario yet covers the {domain} domain; the suite's coverage "
-            f"report lists the gaps",
-        ]
+    covered = set(dom_scenarios)
+    out["unmeasured"] = [
+        "live-mode validation: every number in the suite comes from the "
+        "simulated policy, so the ranking is unconfirmed against a real model",
+        "a cost ceiling: the suite measures prompt volume but not a budget "
+        "the agent must stay under",
+    ]
     if not covered:
         out["caveats"].append(
             f"the suite has no scenario for the {domain} domain yet")

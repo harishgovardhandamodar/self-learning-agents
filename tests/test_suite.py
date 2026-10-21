@@ -245,6 +245,45 @@ def test_report_does_not_mix_incomparable_geometry():
         assert row.get("is_best") is True, row
 
 
+def test_domain_scenarios_map_real_streams():
+    """A domain must resolve to the scenarios that exercise it."""
+    from app import suite as suite_mod
+    hc = suite_mod.domain_scenarios("healthcare")
+    assert "healthcare-drift" in hc and "healthcare" in hc
+    tr = suite_mod.domain_scenarios("trading")
+    assert "trading-drift" in tr
+    # "general" is not an environment; it maps to the non-regulated ones.
+    gen = suite_mod.domain_scenarios("general")
+    assert gen and "topic" in gen
+    assert set(gen) != set(hc)
+
+
+def test_seed_never_counts_as_a_win():
+    """The seed harness wins by not adapting; that is a floor, not a win."""
+    from app import suite as suite_mod
+    cells = [
+        _cell("s", "seed", [0.0, 0.0, 0.0, 0.0]),
+        _cell("s", "scoped", [20.0, 21.0, 19.5, 20.5]),
+    ]
+    rep = suite_mod.build_report(cells)
+    advice = suite_mod.advise("general", rep, scenarios=["s"])
+    assert advice["recommendation"] == "scoped"
+    assert "seed" not in advice["wins"]
+
+
+def test_advice_is_scoped_to_the_domain():
+    from app import suite as suite_mod
+    cells = [
+        _cell("healthcare-drift", "scoped", [30.0, 31.0, 29.5, 30.5]),
+        _cell("trading-drift", "gepa", [30.0, 31.0, 29.5, 30.5]),
+    ]
+    rep = suite_mod.build_report(cells)
+    advice = suite_mod.advise("healthcare", rep)
+    assert advice["scoped_to_domain"] is True
+    assert advice["recommendation"] == "scoped", advice["wins"]
+    assert "gepa" not in advice["wins"]
+
+
 def test_estimate_is_honest_about_size():
     from app import suite as suite_mod
     ids = suite_mod.suite_scenarios("fast")
