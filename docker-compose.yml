@@ -1,0 +1,47 @@
+# Self-Learning Agent Lab — containerised app + dashboard.
+#
+#   docker compose up --build        # API + dashboard at http://localhost:8220
+#   docker compose up --build -d     # detached
+#   docker compose down
+#
+# Live (real-LLM) mode reaches the model backend on the host through
+# host.docker.internal. Override when your backend lives elsewhere:
+#   FOX_SERVICES_URL=http://myhost:8210 docker compose up --build
+
+services:
+  lab:
+    build: .
+    image: self-learning-agents:latest
+    container_name: sla-lab
+    ports:
+      - "${SLA_PORT:-8220}:8220"
+    environment:
+      # Model backend (host's fox-services). Use host.docker.internal so the
+      # container can reach services bound to the host's localhost.
+      FOX_SERVICES_URL: ${FOX_SERVICES_URL:-http://host.docker.internal:8210}
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      SLA_MODEL: ${SLA_MODEL:-fox-managed}
+      # Database lives in the mounted volume so designs/runs survive restarts.
+      SLA_DB: /app/data/sla.db
+      # Pattern catalog mount point (graceful when empty: patterns_available=false).
+      AGENT_PATTERNS_DIR: /patterns
+    extra_hosts:
+      # Makes host.docker.internal resolve on Linux as well as Docker Desktop.
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - sla-data:/app/data
+      - ./exports:/app/exports
+      # The AI-Agents-Patterns catalog: enables the pattern picker and the
+      # pattern/category flow diagrams. Comment the mount out if the
+      # checkout is not on this host - the lab still works without it.
+      - ${AGENT_PATTERNS_DIR:-/home/fox/WorkBook/AI-Agents-Patterns/data}:/patterns:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8220/api/health', timeout=4).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+volumes:
+  sla-data:
