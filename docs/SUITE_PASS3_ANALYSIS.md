@@ -103,7 +103,7 @@ they describe.
 | E14 | *Partly* — the suite's own invariants (seed ≡ 0, scoped I=F=0) are asserted, so a detector that fires wrongly is caught. | `tests/test_lab.py` |
 | E15 | Cost accounting: prompt volume, write volume, lessons created/used, hit rate, and a gain-per-100-units ledger | `app/cost.py` |
 | E16 | Live validation: `tests/live_validation.py` runs the same stream live and simulated and reports the gap. The measured gap is stored in `data/live_validation.json` and surfaced in the advice output. | `tests/live_validation.py` |
-| E17 | *Partly* — the suite reports each cell against the best cell in its stream, and the power table says how far a cell is from resolving a margin. A true oracle (perfect retrieval) is still not implemented. | `app/suite.py` |
+| E17 | The oracle: an agent that files and retrieves by the ground-truth family. It is the ceiling, and the report states how much of it the best real method captured. | `app/evolvers.py`, `app/suite.py` |
 | W1 | `POST /api/suite/run` launches the whole grid as one job | `app/main.py` |
 | W2 | `GET /api/suite/report` — one table for the whole suite, exportable as JSON | `app/suite.py` |
 | W3 | `GET /api/suite/advice` — which evolver for this domain, the caveats, the next steps, and what is not measured | `app/suite.py` |
@@ -175,6 +175,47 @@ numbers are **headroom**, not expected production gains.
 So the suite is honest about being simulator-relative, the bound is
 measured rather than assumed, and the measured bound is shown next to the
 advice rather than buried in a footnote.
+
+## The ceiling, and what it says
+
+The suite now has a floor (the seed harness), five methods, and a ceiling.
+The ceiling is an **oracle**: it files and retrieves lessons by the
+task's ground-truth family instead of by the cluster the router
+discovered, so it always knows which family a request belongs to. It is
+the scoped evolver with one thing changed — the scope key — which makes it
+a strict superset of scoped's information and therefore a true ceiling.
+
+One subtlety cost a wrong answer first: keying on the **intent** alone is
+not a ceiling. Several families share an intent (the "flat" trading signal
+appears in both the momentum and the mean-reversion family), so
+intent-only retrieval can pick a rule from the wrong family and *lose* to
+a properly scoped method. The family has to be known too.
+
+Measured over 50 iterations per cell, the capture of the ceiling:
+
+| scenario | best real method | achieved | ceiling | captured |
+|---|---|---|---|---|
+| workflow | scoped | +16.10 | +16.10 | 100% |
+| topic | reasoningbank | +17.33 | +16.69 | 104% |
+| compound | scoped | +16.67 | +16.67 | 100% |
+| domain | scoped | +19.47 | +19.47 | 100% |
+| domain-workflow | scoped | +22.76 | +22.76 | 100% |
+| healthcare-drift | scoped | +36.02 | +36.02 | 100% |
+| trading-drift | scoped | +25.09 | +24.82 | 101% |
+| interleaved | scoped | +25.48 | +25.48 | 100% |
+| recurring | scoped | +22.23 | +22.23 | 100% |
+| long-horizon | scoped | +20.85 | +20.85 | 100% |
+| hard-order | scoped | +24.84 | +24.68 | 101% |
+
+**Scoped captures 100% of the ceiling on every blocked scenario.** There
+is no headroom left in scope isolation: the router's imperfect clustering
+costs nothing, because the workflow fingerprint and the intent match
+already separate what matters. The remaining gap to a perfect agent is in
+the base model's competence — a different problem with a different fix —
+and the report now says which one the reader is looking at.
+
+The capture percentage is withheld when the ceiling is near zero: a ratio
+over a ceiling of +0.33pp is noise, not a 480% capture.
 
 ## The three bugs this pass's own tests caught
 

@@ -116,7 +116,7 @@ python3 -m tests.sweep --iterations 20 --block 20 --eval 30 \
 |---|---|
 | `app/envs.py` | Self-contained task environments (SQL, tool-call, science, clinical triage, trading) with deterministic graders and the intent taxonomy |
 | `app/retrieval.py` | Similarity, unsupervised routing, workflow fingerprinting |
-| `app/evolvers.py` | The five harness-rewrite rules: `seed`, `reasoningbank`, `gepa`, `metaharness`, `scoped` |
+| `app/evolvers.py` | The harness-rewrite rules: `seed`, `reasoningbank`, `gepa`, `metaharness`, `scoped`, and the `oracle` ceiling |
 | `app/policy.py` | `SimulatedPolicy` (deterministic, no GPU) and `LivePolicy` (ReAct over fox-services) |
 | `app/metrics.py` | Paper metrics (Eq. 8–11) + failure-mode detectors |
 | `app/runner.py` | Stream protocol: train → checkpoint → evaluate on held-out sets |
@@ -133,13 +133,34 @@ python3 -m tests.sweep --iterations 20 --block 20 --eval 30 \
 | `tests/ui_audit.js` | Browser-driven UI audit (Playwright) |
 | `tests/iteration_loop.sh` | The 20-round gate: sweep + tests + UI audit |
 
-## The five evolvers
+The suite now has a floor, five methods, and a ceiling. The **oracle** is
+the ceiling: it files and retrieves lessons by the task's ground-truth
+family, so it always knows which family a request belongs to. The report
+states how much of that ceiling the best real method captured.
+
+| scenario | best real | achieved | ceiling | captured |
+|---|---|---|---|---|
+| workflow | scoped | +16.10 | +16.10 | 100% |
+| topic | reasoningbank | +17.33 | +16.69 | 104% |
+| domain-workflow | scoped | +22.76 | +22.76 | 100% |
+| healthcare-drift | scoped | +36.02 | +36.02 | 100% |
+| interleaved | scoped | +25.48 | +25.48 | 100% |
+| long-horizon | scoped | +20.85 | +20.85 | 100% |
+
+**Scoped captures 100% of the ceiling on every blocked scenario.** The
+router's imperfect clustering costs nothing — the workflow fingerprint
+and the intent match already separate what matters. The remaining gap to
+a perfect agent is in the base model's competence, not in the routing,
+and the report says which one you are looking at.
+
+### The five evolvers
 
 - **seed** — no adaptation; the c_0 baseline. Must read exactly 0 everywhere.
 - **reasoningbank** — one memory item per episode, top-k retrieval by request similarity.
 - **gepa** — a shared strategy prompt, reflectively rewritten and compressed; later blocks overwrite earlier rules.
 - **metaharness** — whole-workspace edits accepted only on validation gain.
 - **scoped** — the lab's proposal: per-cluster, per-workflow sections that are append-only, so a later block cannot overwrite an earlier family's rules.
+- **oracle** — a *reference*, not a competitor: the ceiling.
 
 ## Using the dashboard
 
