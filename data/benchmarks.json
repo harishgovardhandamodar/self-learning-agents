@@ -29,76 +29,76 @@
    },
    "reasoningbank": {
     "terminal_advantage": [
-     17.667,
-     6.407
+     17.333,
+     6.18
     ],
     "average_advantage": [
-     6.685,
-     5.211
+     6.274,
+     4.974
     ],
     "plasticity": [
-     17.556,
-     6.384
+     17.244,
+     6.202
     ],
     "stability": [
-     -11.944,
-     3.379
+     -11.133,
+     3.082
     ],
     "interference": [
-     11.944,
-     3.379
+     11.022,
+     3.06
     ],
     "forgetting": [
-     0.0,
-     0.0
+     0.111,
+     0.463
     ]
    },
    "gepa": {
     "terminal_advantage": [
-     -6.667,
-     4.341
+     -7.467,
+     3.75
     ],
     "average_advantage": [
-     -6.148,
-     3.134
+     -7.245,
+     2.742
     ],
     "plasticity": [
-     10.778,
-     5.074
+     9.489,
+     4.502
     ],
     "stability": [
-     -27.917,
-     4.491
+     -28.289,
+     4.682
     ],
     "interference": [
-     10.472,
-     3.45
+     11.244,
+     2.994
     ],
     "forgetting": [
-     17.444,
-     3.607
+     17.044,
+     4.402
     ]
    },
    "metaharness": {
     "terminal_advantage": [
-     0.0,
-     0.0
+     -0.489,
+     2.43
     ],
     "average_advantage": [
-     0.0,
-     0.0
+     -0.489,
+     2.43
     ],
     "plasticity": [
-     0.0,
-     0.0
+     -0.489,
+     2.43
     ],
     "stability": [
-     0.0,
-     0.0
+     -0.467,
+     2.312
     ],
     "interference": [
-     0.0,
-     0.0
+     0.467,
+     2.312
     ],
     "forgetting": [
      0.0,
@@ -107,16 +107,16 @@
    },
    "scoped": {
     "terminal_advantage": [
-     18.611,
-     5.382
+     16.689,
+     6.096
     ],
     "average_advantage": [
-     12.852,
-     4.264
+     11.319,
+     4.784
     ],
     "plasticity": [
-     18.556,
-     5.348
+     16.645,
+     6.071
     ],
     "stability": [
      0.0,
@@ -161,94 +161,94 @@
    },
    "reasoningbank": {
     "terminal_advantage": [
-     12.083,
-     4.679
+     15.667,
+     7.423
     ],
     "average_advantage": [
-     6.583,
-     4.117
+     9.167,
+     6.299
     ],
     "plasticity": [
-     12.583,
-     4.572
+     16.267,
+     7.258
     ],
     "stability": [
-     -13.167,
-     4.043
+     -13.433,
+     4.102
     ],
     "interference": [
-     12.667,
-     3.762
+     12.833,
+     3.916
     ],
     "forgetting": [
-     0.5,
-     1.336
+     0.6,
+     1.497
     ]
    },
    "gepa": {
     "terminal_advantage": [
-     -11.75,
-     6.033
+     -10.533,
+     6.046
     ],
     "average_advantage": [
-     -5.5,
-     4.059
+     -4.167,
+     4.577
     ],
     "plasticity": [
-     12.417,
-     4.507
+     13.833,
+     5.805
     ],
     "stability": [
-     -38.083,
-     4.753
+     -37.233,
+     5.819
     ],
     "interference": [
-     13.917,
-     4.233
+     12.867,
+     4.206
     ],
     "forgetting": [
-     24.167,
-     4.604
+     24.367,
+     4.591
     ]
    },
    "metaharness": {
     "terminal_advantage": [
-     -5.5,
-     7.176
+     -4.867,
+     6.458
     ],
     "average_advantage": [
-     -5.167,
-     6.492
+     -4.333,
+     5.995
     ],
     "plasticity": [
-     -2.667,
-     5.525
+     -2.2,
+     5.768
     ],
     "stability": [
-     -13.417,
-     10.781
+     -13.633,
+     8.74
     ],
     "interference": [
-     10.583,
-     7.934
+     10.967,
+     6.819
     ],
     "forgetting": [
-     2.833,
-     4.295
+     2.667,
+     3.689
     ]
    },
    "scoped": {
     "terminal_advantage": [
-     14.083,
-     5.606
+     16.1,
+     6.781
     ],
     "average_advantage": [
-     13.917,
-     3.928
+     15.55,
+     5.344
     ],
     "plasticity": [
-     14.083,
-     5.606
+     16.1,
+     6.781
     ],
     "stability": [
      0.0,
@@ -293,106 +293,106 @@
    },
    "reasoningbank": {
     "terminal_advantage": [
-     17.889,
-     7.343
+     18.0,
+     6.257
     ],
     "average_advantage": [
-     7.519,
-     5.914
+     7.681,
+     4.966
     ],
     "plasticity": [
-     17.833,
-     7.427
+     17.956,
+     6.267
     ],
     "stability": [
-     -13.778,
-     2.96
+     -13.756,
+     3.15
     ],
     "interference": [
-     13.667,
-     2.886
+     13.689,
+     3.146
     ],
     "forgetting": [
-     0.111,
-     0.342
+     0.067,
+     0.267
     ]
    },
    "gepa": {
     "terminal_advantage": [
-     -1.833,
-     3.954
+     -1.844,
+     4.051
     ],
     "average_advantage": [
-     -1.241,
-     3.111
+     -0.711,
+     3.173
     ],
     "plasticity": [
-     14.778,
-     6.287
+     15.489,
+     6.5
     ],
     "stability": [
-     -24.083,
-     5.941
+     -24.1,
+     4.78
     ],
     "interference": [
-     7.306,
-     2.936
+     6.567,
+     2.695
     ],
     "forgetting": [
-     16.778,
-     5.845
+     17.533,
+     5.051
     ]
    },
    "metaharness": {
     "terminal_advantage": [
-     -2.5,
-     4.398
+     -3.133,
+     4.251
     ],
     "average_advantage": [
-     -2.407,
-     4.283
+     -2.489,
+     3.705
     ],
     "plasticity": [
-     -2.667,
-     4.566
+     -2.756,
+     4.319
     ],
     "stability": [
-     -1.917,
-     3.114
+     -2.467,
+     3.195
     ],
     "interference": [
-     1.861,
-     3.023
+     1.844,
+     2.762
     ],
     "forgetting": [
-     0.056,
-     0.248
+     0.622,
+     1.77
     ]
    },
    "scoped": {
     "terminal_advantage": [
-     20.5,
-     6.08
+     19.467,
+     6.173
     ],
     "average_advantage": [
-     14.926,
-     4.696
+     14.718,
+     4.523
     ],
     "plasticity": [
-     20.611,
-     6.005
+     19.489,
+     6.148
     ],
     "stability": [
-     -0.111,
-     0.342
+     -0.044,
+     0.22
     ],
     "interference": [
      0.0,
      0.0
     ],
     "forgetting": [
-     0.111,
-     0.342
+     0.044,
+     0.22
     ]
    }
   },
@@ -425,106 +425,106 @@
    },
    "reasoningbank": {
     "terminal_advantage": [
-     17.0,
-     7.058
+     15.767,
+     6.335
     ],
     "average_advantage": [
-     4.729,
-     5.771
+     3.163,
+     5.045
     ],
     "plasticity": [
-     17.125,
-     6.996
+     16.033,
+     6.31
     ],
     "stability": [
-     -13.951,
-     2.643
+     -14.803,
+     2.625
     ],
     "interference": [
-     13.66,
-     2.733
+     14.419,
+     2.678
     ],
     "forgetting": [
-     0.292,
-     0.559
+     0.383,
+     0.828
     ]
    },
    "gepa": {
     "terminal_advantage": [
-     -8.208,
-     2.639
+     -8.35,
+     2.947
     ],
     "average_advantage": [
-     -5.5,
-     1.734
+     -5.971,
+     2.08
     ],
     "plasticity": [
-     12.25,
-     4.935
+     11.917,
+     4.709
     ],
     "stability": [
-     -29.882,
-     3.762
+     -30.103,
+     3.936
     ],
     "interference": [
-     9.424,
-     1.545
+     9.803,
+     1.937
     ],
     "forgetting": [
-     20.458,
-     3.828
+     20.3,
+     3.76
     ]
    },
    "metaharness": {
     "terminal_advantage": [
-     -5.208,
-     4.342
+     -4.767,
+     4.065
     ],
     "average_advantage": [
-     -2.583,
-     2.068
+     -2.662,
+     2.299
     ],
     "plasticity": [
-     -1.458,
-     3.093
+     -1.133,
+     2.871
     ],
     "stability": [
-     -5.611,
-     3.338
+     -5.869,
+     3.416
     ],
     "interference": [
-     1.861,
-     0.946
+     2.186,
+     1.85
     ],
     "forgetting": [
-     3.75,
-     2.67
+     3.683,
+     2.662
     ]
    },
    "scoped": {
     "terminal_advantage": [
-     17.667,
-     6.163
+     16.667,
+     5.781
     ],
     "average_advantage": [
-     12.792,
-     4.749
+     11.508,
+     4.427
     ],
     "plasticity": [
-     17.625,
-     6.143
+     16.65,
+     5.785
     ],
     "stability": [
-     0.0,
-     0.0
+     -0.017,
+     0.118
     ],
     "interference": [
      0.0,
      0.0
     ],
     "forgetting": [
-     0.0,
-     0.0
+     0.017,
+     0.118
     ]
    }
   },
@@ -557,94 +557,94 @@
    },
    "reasoningbank": {
     "terminal_advantage": [
-     35.0,
-     6.72
+     34.111,
+     6.923
     ],
     "average_advantage": [
-     20.518,
-     5.647
+     20.118,
+     5.864
     ],
     "plasticity": [
-     34.444,
-     6.773
+     33.356,
+     6.961
     ],
     "stability": [
-     -4.806,
-     2.532
+     -4.922,
+     2.572
     ],
     "interference": [
-     4.806,
-     2.532
+     4.856,
+     2.549
     ],
     "forgetting": [
-     0.0,
-     0.0
+     0.067,
+     0.348
     ]
    },
    "gepa": {
     "terminal_advantage": [
-     9.667,
-     5.516
+     8.756,
+     5.083
     ],
     "average_advantage": [
-     7.796,
-     4.27
+     7.6,
+     4.068
     ],
     "plasticity": [
-     37.111,
-     6.815
+     37.067,
+     7.009
     ],
     "stability": [
-     -32.361,
-     5.756
+     -33.556,
+     6.119
     ],
     "interference": [
-     4.917,
-     2.317
+     5.244,
+     2.853
     ],
     "forgetting": [
-     27.444,
-     6.087
+     28.311,
+     6.049
     ]
    },
    "metaharness": {
     "terminal_advantage": [
-     4.055,
-     7.32
+     3.667,
+     7.16
     ],
     "average_advantage": [
-     1.148,
-     3.983
+     0.919,
+     4.145
     ],
     "plasticity": [
-     4.333,
-     5.933
+     3.933,
+     5.777
     ],
     "stability": [
-     -3.722,
-     3.184
+     -3.8,
+     3.311
     ],
     "interference": [
-     2.056,
-     2.85
+     2.244,
+     3.341
     ],
     "forgetting": [
-     1.667,
-     2.237
+     1.556,
+     2.094
     ]
    },
    "scoped": {
     "terminal_advantage": [
-     36.056,
-     4.333
+     36.022,
+     5.798
     ],
     "average_advantage": [
-     23.037,
-     3.544
+     23.148,
+     4.751
     ],
     "plasticity": [
-     36.056,
-     4.333
+     35.8,
+     5.768
     ],
     "stability": [
      0.0,
@@ -689,106 +689,106 @@
    },
    "reasoningbank": {
     "terminal_advantage": [
-     25.944,
-     5.882
+     25.067,
+     6.132
     ],
     "average_advantage": [
-     19.981,
-     4.609
+     19.778,
+     4.544
     ],
     "plasticity": [
-     25.833,
-     6.063
+     25.045,
+     6.206
     ],
     "stability": [
-     -0.444,
-     1.504
+     -0.467,
+     1.124
     ],
     "interference": [
-     0.389,
-     1.498
+     0.4,
+     1.117
     ],
     "forgetting": [
-     0.056,
-     0.248
+     0.067,
+     0.267
     ]
    },
    "gepa": {
     "terminal_advantage": [
-     14.167,
-     5.071
+     13.267,
+     4.754
     ],
     "average_advantage": [
-     11.296,
-     3.527
+     11.63,
+     3.293
     ],
     "plasticity": [
-     23.944,
-     5.907
+     24.311,
+     5.735
     ],
     "stability": [
-     -10.917,
-     3.95
+     -12.044,
+     5.382
     ],
     "interference": [
-     0.75,
-     0.791
+     0.8,
+     1.03
     ],
     "forgetting": [
-     10.167,
-     3.97
+     11.244,
+     5.215
     ]
    },
    "metaharness": {
     "terminal_advantage": [
-     10.945,
-     4.492
+     10.511,
+     5.859
     ],
     "average_advantage": [
-     7.333,
-     4.285
+     7.415,
+     4.972
     ],
     "plasticity": [
-     10.389,
-     5.102
+     10.333,
+     5.906
     ],
     "stability": [
-     -1.083,
-     1.627
+     -1.178,
+     1.586
     ],
     "interference": [
-     0.361,
-     0.657
+     0.467,
+     0.812
     ],
     "forgetting": [
-     0.722,
-     1.263
+     0.711,
+     1.265
     ]
    },
    "scoped": {
     "terminal_advantage": [
-     25.333,
-     5.729
+     25.089,
+     6.798
     ],
     "average_advantage": [
-     17.444,
-     3.929
+     17.326,
+     4.721
     ],
     "plasticity": [
-     25.167,
-     6.11
+     25.111,
+     6.846
     ],
     "stability": [
-     -0.278,
-     0.775
+     -0.233,
+     0.626
     ],
     "interference": [
-     0.167,
-     0.627
+     0.1,
+     0.43
     ],
     "forgetting": [
-     0.111,
-     0.497
+     0.133,
+     0.483
     ]
    }
   },
@@ -821,106 +821,106 @@
    },
    "reasoningbank": {
     "terminal_advantage": [
-     37.417,
-     9.86
+     36.5,
+     9.393
     ],
     "average_advantage": [
-     24.75,
-     7.21
+     23.833,
+     6.713
     ],
     "plasticity": [
-     36.333,
-     10.111
+     36.133,
+     9.461
     ],
     "stability": [
-     -4.917,
-     1.91
+     -6.2,
+     2.498
     ],
     "interference": [
-     4.833,
-     1.785
+     6.0,
+     2.381
     ],
     "forgetting": [
-     0.083,
-     0.373
+     0.2,
+     0.642
     ]
    },
    "gepa": {
     "terminal_advantage": [
-     10.667,
-     8.296
+     10.4,
+     7.66
     ],
     "average_advantage": [
-     9.833,
-     4.975
+     10.2,
+     5.493
     ],
     "plasticity": [
-     33.25,
-     8.942
+     34.267,
+     9.357
     ],
     "stability": [
-     -29.0,
-     7.597
+     -30.433,
+     6.605
     ],
     "interference": [
-     6.417,
-     3.718
+     6.567,
+     3.34
     ],
     "forgetting": [
-     22.583,
-     5.339
+     23.867,
+     5.629
     ]
    },
    "metaharness": {
     "terminal_advantage": [
-     -3.167,
-     6.28
+     -2.833,
+     6.045
     ],
     "average_advantage": [
-     -3.0,
-     4.032
+     -2.55,
+     3.83
     ],
     "plasticity": [
-     -1.25,
-     4.389
+     -0.433,
+     4.992
     ],
     "stability": [
-     -4.583,
-     5.126
+     -4.867,
+     4.362
     ],
     "interference": [
-     2.25,
-     3.516
+     2.133,
+     3.213
     ],
     "forgetting": [
-     2.333,
-     3.877
+     2.733,
+     3.607
     ]
    },
    "scoped": {
     "terminal_advantage": [
-     36.5,
-     12.054
+     35.967,
+     10.896
     ],
     "average_advantage": [
-     27.167,
-     8.62
+     26.867,
+     7.676
     ],
     "plasticity": [
-     36.667,
-     11.66
+     36.3,
+     10.58
     ],
     "stability": [
-     -0.333,
-     0.872
+     -0.4,
+     0.862
     ],
     "interference": [
      0.0,
      0.0
     ],
     "forgetting": [
-     0.333,
-     0.872
+     0.4,
+     0.862
     ]
    }
   },
@@ -953,106 +953,106 @@
    },
    "reasoningbank": {
     "terminal_advantage": [
-     19.278,
-     6.591
+     20.711,
+     6.786
     ],
     "average_advantage": [
-     9.407,
-     6.001
+     9.867,
+     5.304
     ],
     "plasticity": [
-     20.056,
-     6.362
+     21.311,
+     6.485
     ],
     "stability": [
-     -14.917,
-     4.197
+     -15.433,
+     3.662
     ],
     "interference": [
-     13.917,
-     3.607
+     14.589,
+     3.363
     ],
     "forgetting": [
-     1.0,
-     1.608
+     0.844,
+     1.515
     ]
    },
    "gepa": {
     "terminal_advantage": [
-     -10.0,
-     4.371
+     -9.222,
+     4.122
     ],
     "average_advantage": [
-     -3.111,
-     3.757
+     -2.244,
+     3.409
     ],
     "plasticity": [
-     18.611,
-     6.222
+     20.022,
+     6.186
     ],
     "stability": [
-     -38.389,
-     5.493
+     -38.611,
+     4.65
     ],
     "interference": [
-     9.778,
-     2.869
+     9.367,
+     2.495
     ],
     "forgetting": [
-     28.611,
-     5.045
+     29.244,
+     4.716
     ]
    },
    "metaharness": {
     "terminal_advantage": [
-     -5.222,
-     5.409
+     -3.378,
+     5.004
     ],
     "average_advantage": [
-     -3.981,
-     3.83
+     -2.815,
+     3.435
     ],
     "plasticity": [
-     -2.667,
-     4.256
+     -0.844,
+     4.419
     ],
     "stability": [
-     -8.861,
-     4.954
+     -8.311,
+     4.562
     ],
     "interference": [
-     5.528,
-     3.408
+     5.289,
+     3.197
     ],
     "forgetting": [
-     3.333,
-     2.792
+     3.022,
+     2.647
     ]
    },
    "scoped": {
     "terminal_advantage": [
-     22.167,
-     6.453
+     22.756,
+     5.919
     ],
     "average_advantage": [
-     18.574,
-     5.188
+     18.844,
+     4.57
     ],
     "plasticity": [
-     22.278,
-     6.403
+     22.778,
+     5.885
     ],
     "stability": [
-     -0.111,
-     0.342
+     -0.044,
+     0.22
     ],
     "interference": [
      0.0,
      0.0
     ],
     "forgetting": [
-     0.111,
-     0.342
+     0.044,
+     0.22
     ]
    }
   },
@@ -1085,24 +1085,24 @@
    },
    "reasoningbank": {
     "terminal_advantage": [
-     18.889,
-     9.12
+     17.378,
+     8.102
     ],
     "average_advantage": [
-     12.741,
-     9.646
+     11.704,
+     8.402
     ],
     "plasticity": [
-     9.778,
-     5.306
+     9.289,
+     4.745
     ],
     "stability": [
-     -9.111,
-     2.829
+     -8.844,
+     2.812
     ],
     "interference": [
-     9.111,
-     2.829
+     8.844,
+     2.812
     ],
     "forgetting": [
      0.0,
@@ -1111,32 +1111,86 @@
    },
    "gepa": {
     "terminal_advantage": [
-     6.167,
-     7.05
+     5.822,
+     6.52
     ],
     "average_advantage": [
-     2.648,
-     4.38
+     2.081,
+     4.005
     ],
     "plasticity": [
-     3.667,
-     4.446
+     3.867,
+     4.231
     ],
     "stability": [
-     -7.0,
-     2.997
+     -7.822,
+     3.142
     ],
     "interference": [
-     4.333,
-     1.687
+     4.8,
+     2.038
     ],
     "forgetting": [
-     2.667,
-     2.375
+     3.022,
+     2.376
     ]
    },
    "metaharness": {
     "terminal_advantage": [
+     -0.556,
+     2.552
+    ],
+    "average_advantage": [
+     -0.444,
+     2.059
+    ],
+    "plasticity": [
+     -0.422,
+     2.019
+    ],
+    "stability": [
+     -0.267,
+     1.135
+    ],
+    "interference": [
+     0.2,
+     1.045
+    ],
+    "forgetting": [
+     0.067,
+     0.471
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     17.467,
+     8.763
+    ],
+    "average_advantage": [
+     14.193,
+     7.946
+    ],
+    "plasticity": [
+     9.133,
+     5.332
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "interleaved": {
+   "seed": {
+    "terminal_advantage": [
      0.0,
      0.0
     ],
@@ -1161,18 +1215,124 @@
      0.0
     ]
    },
-   "scoped": {
+   "reasoningbank": {
     "terminal_advantage": [
-     19.333,
-     9.369
+     24.533,
+     5.749
     ],
     "average_advantage": [
-     15.667,
-     8.867
+     17.238,
+     4.831
     ],
     "plasticity": [
-     10.0,
-     5.688
+     16.683,
+     5.328
+    ],
+    "stability": [
+     -2.139,
+     1.857
+    ],
+    "interference": [
+     1.272,
+     1.381
+    ],
+    "forgetting": [
+     0.867,
+     1.166
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     4.067,
+     4.123
+    ],
+    "average_advantage": [
+     2.863,
+     3.044
+    ],
+    "plasticity": [
+     2.567,
+     5.005
+    ],
+    "stability": [
+     -5.231,
+     3.737
+    ],
+    "interference": [
+     1.781,
+     1.346
+    ],
+    "forgetting": [
+     3.45,
+     3.442
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -0.85,
+     4.967
+    ],
+    "average_advantage": [
+     -1.983,
+     2.69
+    ],
+    "plasticity": [
+     1.667,
+     4.966
+    ],
+    "stability": [
+     -6.242,
+     3.002
+    ],
+    "interference": [
+     3.192,
+     2.669
+    ],
+    "forgetting": [
+     3.05,
+     2.154
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     25.483,
+     5.445
+    ],
+    "average_advantage": [
+     19.504,
+     4.954
+    ],
+    "plasticity": [
+     19.45,
+     5.621
+    ],
+    "stability": [
+     -1.633,
+     1.614
+    ],
+    "interference": [
+     0.517,
+     0.854
+    ],
+    "forgetting": [
+     1.117,
+     1.374
+    ]
+   }
+  },
+  "recurring": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
     ],
     "stability": [
      0.0,
@@ -1185,6 +1345,374 @@
     "forgetting": [
      0.0,
      0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     21.427,
+     8.025
+    ],
+    "average_advantage": [
+     13.107,
+     7.521
+    ],
+    "plasticity": [
+     11.32,
+     4.26
+    ],
+    "stability": [
+     -8.724,
+     2.057
+    ],
+    "interference": [
+     8.698,
+     2.084
+    ],
+    "forgetting": [
+     0.027,
+     0.132
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     4.853,
+     4.777
+    ],
+    "average_advantage": [
+     1.565,
+     3.042
+    ],
+    "plasticity": [
+     8.547,
+     4.008
+    ],
+    "stability": [
+     -14.32,
+     3.641
+    ],
+    "interference": [
+     4.627,
+     1.264
+    ],
+    "forgetting": [
+     9.693,
+     3.469
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -2.453,
+     3.6
+    ],
+    "average_advantage": [
+     -1.219,
+     1.974
+    ],
+    "plasticity": [
+     -0.6,
+     1.768
+    ],
+    "stability": [
+     -1.48,
+     1.999
+    ],
+    "interference": [
+     0.267,
+     1.135
+    ],
+    "forgetting": [
+     1.213,
+     1.821
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     22.227,
+     6.305
+    ],
+    "average_advantage": [
+     16.291,
+     6.505
+    ],
+    "plasticity": [
+     11.72,
+     3.584
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "long-horizon": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     20.467,
+     4.224
+    ],
+    "average_advantage": [
+     2.965,
+     3.247
+    ],
+    "plasticity": [
+     20.458,
+     4.235
+    ],
+    "stability": [
+     -16.354,
+     2.395
+    ],
+    "interference": [
+     16.004,
+     2.372
+    ],
+    "forgetting": [
+     0.35,
+     0.486
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     -4.775,
+     2.383
+    ],
+    "average_advantage": [
+     -6.532,
+     1.032
+    ],
+    "plasticity": [
+     17.675,
+     3.538
+    ],
+    "stability": [
+     -33.199,
+     3.26
+    ],
+    "interference": [
+     10.632,
+     1.322
+    ],
+    "forgetting": [
+     22.567,
+     3.018
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -4.325,
+     2.837
+    ],
+    "average_advantage": [
+     -3.545,
+     1.602
+    ],
+    "plasticity": [
+     -1.383,
+     3.07
+    ],
+    "stability": [
+     -6.745,
+     2.015
+    ],
+    "interference": [
+     2.271,
+     2.047
+    ],
+    "forgetting": [
+     4.475,
+     1.632
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     20.85,
+     3.434
+    ],
+    "average_advantage": [
+     11.389,
+     2.453
+    ],
+    "plasticity": [
+     20.892,
+     3.443
+    ],
+    "stability": [
+     -0.158,
+     0.265
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.158,
+     0.265
+    ]
+   }
+  },
+  "hard-order": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     23.833,
+     4.981
+    ],
+    "average_advantage": [
+     6.52,
+     3.62
+    ],
+    "plasticity": [
+     23.944,
+     4.84
+    ],
+    "stability": [
+     -15.767,
+     2.619
+    ],
+    "interference": [
+     15.334,
+     2.609
+    ],
+    "forgetting": [
+     0.433,
+     0.739
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     -0.589,
+     2.713
+    ],
+    "average_advantage": [
+     -3.37,
+     1.606
+    ],
+    "plasticity": [
+     24.122,
+     4.161
+    ],
+    "stability": [
+     -34.764,
+     3.789
+    ],
+    "interference": [
+     9.886,
+     1.919
+    ],
+    "forgetting": [
+     24.878,
+     3.783
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -0.822,
+     4.629
+    ],
+    "average_advantage": [
+     -4.343,
+     3.017
+    ],
+    "plasticity": [
+     -0.344,
+     4.293
+    ],
+    "stability": [
+     -11.298,
+     3.593
+    ],
+    "interference": [
+     8.609,
+     4.238
+    ],
+    "forgetting": [
+     2.689,
+     1.632
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     24.844,
+     4.487
+    ],
+    "average_advantage": [
+     14.128,
+     2.834
+    ],
+    "plasticity": [
+     24.689,
+     4.425
+    ],
+    "stability": [
+     -0.036,
+     0.118
+    ],
+    "interference": [
+     0.013,
+     0.048
+    ],
+    "forgetting": [
+     0.022,
+     0.11
     ]
    }
   },
@@ -1217,16 +1745,16 @@
    },
    "reasoningbank": {
     "terminal_advantage": [
-     28.167,
-     16.489
+     28.933,
+     15.612
     ],
     "average_advantage": [
-     28.167,
-     16.489
+     28.933,
+     15.612
     ],
     "plasticity": [
-     28.167,
-     16.489
+     28.933,
+     15.612
     ],
     "stability": [
      0.0,
@@ -1243,16 +1771,16 @@
    },
    "gepa": {
     "terminal_advantage": [
-     30.5,
-     13.257
+     33.667,
+     13.805
     ],
     "average_advantage": [
-     30.5,
-     13.257
+     33.667,
+     13.805
     ],
     "plasticity": [
-     30.5,
-     13.257
+     33.667,
+     13.805
     ],
     "stability": [
      0.0,
@@ -1269,16 +1797,16 @@
    },
    "metaharness": {
     "terminal_advantage": [
-     -1.333,
-     4.104
+     0.267,
+     4.251
     ],
     "average_advantage": [
-     -1.333,
-     4.104
+     0.267,
+     4.251
     ],
     "plasticity": [
-     -1.333,
-     4.104
+     0.267,
+     4.251
     ],
     "stability": [
      0.0,
@@ -1295,16 +1823,16 @@
    },
    "scoped": {
     "terminal_advantage": [
-     29.667,
-     13.972
+     30.0,
+     13.418
     ],
     "average_advantage": [
-     29.667,
-     13.972
+     30.0,
+     13.418
     ],
     "plasticity": [
-     29.667,
-     13.972
+     30.0,
+     13.418
     ],
     "stability": [
      0.0,
@@ -1349,16 +1877,16 @@
    },
    "reasoningbank": {
     "terminal_advantage": [
-     20.833,
-     10.08
+     21.867,
+     9.408
     ],
     "average_advantage": [
-     20.833,
-     10.08
+     21.867,
+     9.408
     ],
     "plasticity": [
-     20.833,
-     10.08
+     21.867,
+     9.408
     ],
     "stability": [
      0.0,
@@ -1375,16 +1903,16 @@
    },
    "gepa": {
     "terminal_advantage": [
-     19.333,
-     11.166
+     20.867,
+     11.445
     ],
     "average_advantage": [
-     19.333,
-     11.166
+     20.867,
+     11.445
     ],
     "plasticity": [
-     19.333,
-     11.166
+     20.867,
+     11.445
     ],
     "stability": [
      0.0,
@@ -1401,16 +1929,16 @@
    },
    "metaharness": {
     "terminal_advantage": [
-     1.667,
-     6.534
+     2.067,
+     6.962
     ],
     "average_advantage": [
-     1.667,
-     6.534
+     2.067,
+     6.962
     ],
     "plasticity": [
-     1.667,
-     6.534
+     2.067,
+     6.962
     ],
     "stability": [
      0.0,
@@ -1427,16 +1955,412 @@
    },
    "scoped": {
     "terminal_advantage": [
-     21.0,
-     9.247
+     20.733,
+     9.483
     ],
     "average_advantage": [
-     21.0,
-     9.247
+     20.733,
+     9.483
     ],
     "plasticity": [
-     21.0,
-     9.247
+     20.733,
+     9.483
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "sql": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     18.933,
+     12.944
+    ],
+    "average_advantage": [
+     18.933,
+     12.944
+    ],
+    "plasticity": [
+     18.933,
+     12.944
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     15.533,
+     9.0
+    ],
+    "average_advantage": [
+     15.533,
+     9.0
+    ],
+    "plasticity": [
+     15.533,
+     9.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -0.067,
+     1.063
+    ],
+    "average_advantage": [
+     -0.067,
+     1.063
+    ],
+    "plasticity": [
+     -0.067,
+     1.063
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     18.133,
+     12.31
+    ],
+    "average_advantage": [
+     18.133,
+     12.31
+    ],
+    "plasticity": [
+     18.133,
+     12.31
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "toolcall": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     1.6,
+     8.657
+    ],
+    "average_advantage": [
+     1.6,
+     8.657
+    ],
+    "plasticity": [
+     1.6,
+     8.657
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     -2.133,
+     8.186
+    ],
+    "average_advantage": [
+     -2.133,
+     8.186
+    ],
+    "plasticity": [
+     -2.133,
+     8.186
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -0.067,
+     0.471
+    ],
+    "average_advantage": [
+     -0.067,
+     0.471
+    ],
+    "plasticity": [
+     -0.067,
+     0.471
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     0.333,
+     8.116
+    ],
+    "average_advantage": [
+     0.333,
+     8.116
+    ],
+    "plasticity": [
+     0.333,
+     8.116
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "science": {
+   "seed": {
+    "terminal_advantage": [
+     0.0,
+     0.0
+    ],
+    "average_advantage": [
+     0.0,
+     0.0
+    ],
+    "plasticity": [
+     0.0,
+     0.0
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "reasoningbank": {
+    "terminal_advantage": [
+     34.333,
+     10.947
+    ],
+    "average_advantage": [
+     34.333,
+     10.947
+    ],
+    "plasticity": [
+     34.333,
+     10.947
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "gepa": {
+    "terminal_advantage": [
+     33.133,
+     11.979
+    ],
+    "average_advantage": [
+     33.133,
+     11.979
+    ],
+    "plasticity": [
+     33.133,
+     11.979
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "metaharness": {
+    "terminal_advantage": [
+     -0.267,
+     5.077
+    ],
+    "average_advantage": [
+     -0.267,
+     5.077
+    ],
+    "plasticity": [
+     -0.267,
+     5.077
+    ],
+    "stability": [
+     0.0,
+     0.0
+    ],
+    "interference": [
+     0.0,
+     0.0
+    ],
+    "forgetting": [
+     0.0,
+     0.0
+    ]
+   },
+   "scoped": {
+    "terminal_advantage": [
+     35.533,
+     11.792
+    ],
+    "average_advantage": [
+     35.533,
+     11.792
+    ],
+    "plasticity": [
+     35.533,
+     11.792
     ],
     "stability": [
      0.0,
@@ -1461,5 +2385,5 @@
   "healthcare": "Single-family triage stream. High variance: read the std before trusting a single number.",
   "trading": "Single-family signal stream. High variance (ceiling effects): read the std before trusting a single number."
  },
- "source": "measured sweep: 20 iterations per cell, block 20, eval 30"
+ "source": "measured sweep: 50 iterations per cell, block 20, eval 30"
 }
