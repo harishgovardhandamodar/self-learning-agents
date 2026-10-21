@@ -213,6 +213,38 @@ def test_advice_is_derived_not_asserted():
     assert advice["unmeasured"], "advice must say what is not measured yet"
 
 
+def test_report_does_not_mix_incomparable_geometry():
+    """
+    A 4-episode probe run and a 20-episode measured run are not comparable.
+
+    Mixing them in one cell produces a variance that is not the method's
+    variance, and the comparison then says nothing at all.
+    """
+    from app import suite as suite_mod
+    same = [
+        _cell("s", "scoped", [10.0, 10.5, 9.8, 10.2]),
+        _cell("s", "reasoningbank", [6.0, 6.5, 5.8, 6.2]),
+    ]
+    for c in same:
+        c["block_size"] = 20
+    rep = suite_mod.build_report(same)
+    assert len(rep["rows"]) == 2
+    loser = [r for r in rep["rows"] if not r.get("is_best")]
+    assert loser and loser[0]["margin_vs_best"] > 3.0
+
+    mixed = [
+        _cell("s", "scoped", [10.0, 10.5, 9.8, 10.2]),
+        _cell("s", "reasoningbank", [6.0, 6.5, 5.8, 6.2]),
+    ]
+    mixed[0]["block_size"] = 4
+    mixed[1]["block_size"] = 20
+    rep2 = suite_mod.build_report(mixed)
+    # Each geometry is its own comparison group, so nothing is compared.
+    assert len(rep2["rows"]) == 2
+    for row in rep2["rows"]:
+        assert row.get("is_best") is True, row
+
+
 def test_estimate_is_honest_about_size():
     from app import suite as suite_mod
     ids = suite_mod.suite_scenarios("fast")

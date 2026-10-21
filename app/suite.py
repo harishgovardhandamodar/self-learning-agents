@@ -87,59 +87,69 @@ def build_report(cells: List[Dict[str, Any]], metric: str = "terminal_advantage"
 
     rows: List[Dict[str, Any]] = []
     for stream, group in sorted(by_stream.items()):
-        ranked = stats_mod.rank_cells(group, metric)
-        # The best CELL (not the best rank row) is what the others are
-        # compared against: rank_cells returns summaries, compare_cells
-        # needs the raw values.
-        by_evolver = {c.get("evolver"): c for c in group}
-        best_evolver = ranked[0]["evolver"] if ranked else None
-        best_cell = by_evolver.get(best_evolver)
-        # Multiplicity: compare every cell against the best one.
-        pvals: Dict[str, float] = {}
+        # Only cells with the same harness geometry are comparable: a
+        # 4-episode probe run and a 20-episode measured run have different
+        # variances, and comparing them says nothing.
+        by_geom: Dict[Any, List[Dict[str, Any]]] = {}
         for c in group:
-            if best_cell is None or c.get("evolver") == best_evolver:
-                continue
-            cmp = stats_mod.compare_cells(best_cell, c, metric)
-            if cmp.get("p_value") is not None:
-                pvals[c.get("evolver", "?")] = cmp["p_value"]
-        holm = stats_mod.holm_bonferroni(pvals, alpha) if pvals else None
+            geom = (c.get("block_size", 20), c.get("n_eval", 30))
+            by_geom.setdefault(geom, []).append(c)
 
-        for r in ranked:
-            cell = by_evolver.get(r["evolver"], {})
-            gm = cell.get("metrics") or {}
-            row = {
-                "stream": stream,
-                "evolver": r["evolver"],
-                "n": r["n"],
-                "rank": r["rank"],
-                "mean": r["mean"],
-                "std": r["std"],
-                "metrics": {k: (gm.get(k) or {}).get("mean") for k in HEADLINE
-                            if k in gm},
-                "guardrails": cell.get("guardrails", {}),
-                "cost": cell.get("cost", {}),
-                "efficiency": cell.get("efficiency", {}),
-            }
-            if best_cell is not None and r["evolver"] != best_evolver:
-                cmp = stats_mod.compare_cells(best_cell, cell, metric)
-                row["margin_vs_best"] = cmp.get("difference")
-                row["ci_low"] = cmp.get("ci_low")
-                row["ci_high"] = cmp.get("ci_high")
-                row["effect_size"] = cmp.get("effect_size")
-                row["effect_label"] = cmp.get("effect_label")
-                row["p_value"] = cmp.get("p_value")
-                row["significant_raw"] = cmp.get("significant")
-                if holm:
-                    row["p_adjusted"] = (holm["adjusted"] or {}).get(r["evolver"])
-                    row["significant"] = (holm["significant"] or {}).get(r["evolver"])
+        for geom, cells_g in sorted(by_geom.items()):
+            ranked = stats_mod.rank_cells(cells_g, metric)
+            # The best CELL (not the best rank row) is what the others are
+            # compared against: rank_cells returns summaries, compare_cells
+            # needs the raw values.
+            by_evolver = {c.get("evolver"): c for c in cells_g}
+            best_evolver = ranked[0]["evolver"] if ranked else None
+            best_cell = by_evolver.get(best_evolver)
+            # Multiplicity: compare every cell against the best one.
+            pvals: Dict[str, float] = {}
+            for c in cells_g:
+                if best_cell is None or c.get("evolver") == best_evolver:
+                    continue
+                cmp = stats_mod.compare_cells(best_cell, c, metric)
+                if cmp.get("p_value") is not None:
+                    pvals[c.get("evolver", "?")] = cmp["p_value"]
+            holm = stats_mod.holm_bonferroni(pvals, alpha) if pvals else None
+
+            for r in ranked:
+                cell = by_evolver.get(r["evolver"], {})
+                gm = cell.get("metrics") or {}
+                row = {
+                    "stream": stream,
+                    "evolver": r["evolver"],
+                    "block_size": geom[0], "n_eval": geom[1],
+                    "n": r["n"],
+                    "rank": r["rank"],
+                    "mean": r["mean"],
+                    "std": r["std"],
+                    "metrics": {k: (gm.get(k) or {}).get("mean") for k in HEADLINE
+                                if k in gm},
+                    "guardrails": cell.get("guardrails", {}),
+                    "cost": cell.get("cost", {}),
+                    "efficiency": cell.get("efficiency", {}),
+                }
+                if best_cell is not None and r["evolver"] != best_evolver:
+                    cmp = stats_mod.compare_cells(best_cell, cell, metric)
+                    row["margin_vs_best"] = cmp.get("difference")
+                    row["ci_low"] = cmp.get("ci_low")
+                    row["ci_high"] = cmp.get("ci_high")
+                    row["effect_size"] = cmp.get("effect_size")
+                    row["effect_label"] = cmp.get("effect_label")
+                    row["p_value"] = cmp.get("p_value")
+                    row["significant_raw"] = cmp.get("significant")
+                    if holm:
+                        row["p_adjusted"] = (holm["adjusted"] or {}).get(r["evolver"])
+                        row["significant"] = (holm["significant"] or {}).get(r["evolver"])
+                    else:
+                        row["significant"] = cmp.get("significant")
+                    row["n_comparisons"] = holm["n_comparisons"] if holm else 1
                 else:
-                    row["significant"] = cmp.get("significant")
-                row["n_comparisons"] = holm["n_comparisons"] if holm else 1
-            else:
-                row["margin_vs_best"] = 0.0
-                row["significant"] = True
-                row["is_best"] = True
-            rows.append(row)
+                    row["margin_vs_best"] = 0.0
+                    row["significant"] = True
+                    row["is_best"] = True
+                rows.append(row)
     rows.sort(key=lambda r: (r["stream"], r["rank"]))
     return {
         "metric": metric,

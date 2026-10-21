@@ -550,12 +550,22 @@ async def stats_compare(a: str = "", b: str = "", metric: str = "terminal_advant
     """
     Compare two cells with a significance test.
 
-    `a` and `b` are "stream/evolver" keys. The result carries the mean
-    difference, a 95% confidence interval and a p-value, so "better" is a
+    `a` and `b` are cell keys: "stream/evolver" or the full
+    "stream/evolver/b{block}e{n_eval}". A prefix resolves to the cell with
+    that stream and evolver. The result carries the mean difference, a 95%
+    confidence interval, an effect size and a p-value, so "better" is a
     claim with a number attached rather than a glance at two means.
     """
     cells = _cell_summary()
-    ca, cb = cells.get(a), cells.get(b)
+
+    def resolve(key: str) -> Optional[Dict[str, Any]]:
+        if key in cells:
+            return cells[key]
+        matches = [c for k, c in cells.items()
+                   if k == key or k.startswith(key + "/")]
+        return matches[0] if len(matches) == 1 else None
+
+    ca, cb = resolve(a), resolve(b)
     if not ca or not cb:
         raise HTTPException(404, f"unknown cell(s): {a!r} / {b!r}")
     return stats_mod.compare_cells(ca, cb, metric)
@@ -584,7 +594,15 @@ async def stats_recommend(stream: str = "", metric: str = "terminal_advantage") 
 
 
 def _cell_summary() -> Dict[str, Any]:
-    """Aggregate finished runs into cells, keeping the raw values for tests."""
+    """
+    Aggregate finished runs into cells, keeping the raw values for tests.
+
+    Runs are only comparable when they used the same configuration, so a
+    cell is keyed by (stream, evolver) AND the harness geometry (block size,
+    hold-out size). Mixing a 4-episode probe run with a 20-episode measured
+    run in one cell produces a variance that is not the method's variance,
+    and the comparison then says nothing.
+    """
     rows = db.list_runs(limit=2000)
     cells: Dict[str, Dict[str, Any]] = {}
     metrics = ("terminal_advantage", "average_advantage", "plasticity", "stability",
@@ -597,9 +615,13 @@ def _cell_summary() -> Dict[str, Any]:
         m = env.get("metrics", env) if isinstance(env, dict) else {}
         if not m or "terminal_advantage" not in m:
             continue
-        key = f"{r.get('stream_id')}/{r.get('evolver')}"
+        cfg = r.get("config") or {}
+        block = int(cfg.get("block_size", 20) or 20)
+        n_eval = int(cfg.get("n_eval", 30) or 30)
+        key = f"{r.get('stream_id')}/{r.get('evolver')}/b{block}e{n_eval}"
         cell = cells.setdefault(key, {
             "stream": r.get("stream_id"), "evolver": r.get("evolver"),
+            "block_size": block, "n_eval": n_eval,
             "n": 0, "run_ids": [],
             "metrics": {k: {"values": [], "n": 0} for k in metrics},
             "guardrail_violations": 0,
