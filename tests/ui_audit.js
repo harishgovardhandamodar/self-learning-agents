@@ -215,6 +215,31 @@ const note = (kind, msg, extra = {}) => problems.push({ kind, msg, ...extra });
   if (landGraphs < 2) note('ux', `landscape knowledge graphs rendered ${landGraphs}/2`);
   await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-landscape.png`), fullPage: true });
 
+  // The audit adds a work to check the form works, then removes it again.
+  // An audit that leaves litter in the knowledge base is not an audit.
+  await page.fill('#l-title', 'Audit probe work');
+  await page.fill('#l-summary', 'added by the ui audit, then removed');
+  await page.fill('#l-mechanism', 'none');
+  await page.selectOption('#l-surface-add', 'memory');
+  await page.click('#l-add button[type=submit]');
+  await page.waitForTimeout(2000);
+  const addMsg = await page.textContent('#l-add-msg');
+  if (!/Added/i.test(addMsg || '')) note('ux', 'the landscape add form did not confirm');
+  const probeId = await page.evaluate(async () => {
+    const r = await fetch('/api/landscape').then((x) => x.json());
+    const hit = r.works.find((w) => w.title === 'Audit probe work');
+    return hit ? hit.id : null;
+  });
+  if (!probeId) {
+    note('ux', 'the landscape add form did not add the work to the knowledge base');
+  } else {
+    const removed = await page.evaluate(async (id) => {
+      const r = await fetch('/api/landscape/works/' + id, { method: 'DELETE' });
+      return r.status;
+    }, probeId);
+    if (removed !== 200) note('ux', 'the landscape entry could not be removed');
+  }
+
   // --------------------------------------------------------- reference tab
   await page.click('nav button[data-tab="reference"]');
   await page.waitForTimeout(900);
