@@ -87,6 +87,11 @@ async def main() -> None:
                     help="base seed for lesson-id generation (bit-reproducibility)")
     ap.add_argument("--jobs", type=int, default=6)
     ap.add_argument("--out", default="")
+    ap.add_argument("--eval-by-scenario", default="",
+                    help="per-scenario hold-out size, e.g. 'long-horizon=15'. "
+                         "The expensive shapes cost O(checkpoints x families x "
+                         "hold-out) per run, so a gate can measure them with a "
+                         "smaller hold-out and still catch regressions.")
     ap.add_argument("--refresh-benchmarks", default="",
                     help="write the measured bands to this JSON file and use it "
                          "as the suite's reference")
@@ -95,10 +100,16 @@ async def main() -> None:
     scenarios = [s for s in args.scenarios.split(",") if s]
     evolvers = list(EVOLVERS) if args.evolvers == "all" else args.evolvers.split(",")
     sem = asyncio.Semaphore(max(1, args.jobs))
+    # Per-scenario hold-out sizes, e.g. "long-horizon=15,interleaved=20".
+    eval_by_scenario: dict = {}
+    for part in (args.eval_by_scenario or "").split(","):
+        if "=" in part:
+            k, v = part.split("=", 1)
+            eval_by_scenario[k.strip()] = int(v)
 
     async def bounded(sc: str, eid: str, i: int) -> dict:
         async with sem:
-            return await one(sc, eid, args.block, args.eval,
+            return await one(sc, eid, args.block, eval_by_scenario.get(sc, args.eval),
                              args.run_seed_base + i,
                              args.policy_seed_base + i,
                              args.sample_seed_base + i,

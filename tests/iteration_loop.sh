@@ -3,14 +3,19 @@
 #
 # Each round:
 #   1. runs the mechanism sweep (scenarios x evolvers x iterations)
-#   2. runs the browser-driven UI audit against the live container
-#   3. checks the measured bands still hold
+#   2. runs the unit and API tests
+#   3. runs the browser-driven UI audit against the live container
 #
 # Rounds 1..N (50 by default). Stops at the first failure and prints what
 # broke, so a regression is caught by the round it appears in, not fifty
 # rounds later.
 #
 #   ./tests/iteration_loop.sh [rounds] [iterations-per-cell]
+#
+# Cost: about a minute per round, so 50 rounds is roughly an hour. The
+# long-horizon stream is measured with a 12-task hold-out inside the gate
+# (it costs nine checkpoints times eight families per run); the reference
+# bands measure it at full size.
 #
 # Requires: python3, node + playwright-core, and the container running
 # (docker compose up -d --build).
@@ -52,6 +57,7 @@ for round in $(seq 1 "$ROUNDS"); do
 
   python3 -m tests.sweep --iterations "$ITERS" --block 20 --eval 30 --jobs 8 \
     --scenarios topic,workflow,domain,compound,healthcare-drift,trading-drift,science-drift,domain-workflow,revisit,interleaved,recurring,long-horizon,hard-order \
+    --eval-by-scenario "long-horizon=12" \
     --out "/tmp/sla_sweep_r${round}.json" 2>&1 | tail -8
   sweep_rc=$?
   if [ $sweep_rc -ne 0 ]; then
