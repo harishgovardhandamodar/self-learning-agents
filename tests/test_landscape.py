@@ -95,17 +95,58 @@ def test_the_falsifiability_rule_is_the_one_claimed():
 
 
 def test_graphs_cover_every_work_and_concept():
+    """
+    Every work and every concept must appear in the picture.
+
+    A work that implements three mechanisms is drawn three times - once
+    under each - so the node count is the number of incidences, not the
+    number of works. The invariant that matters is that nothing is
+    missing: a work with no box, or a concept with no works, is a fact
+    the table states and the graph does not.
+    """
     land = ls.landscape_graph()
     mech = ls.mechanism_graph()
     assert land["mermaid"].startswith("flowchart")
     assert mech["mermaid"].startswith("flowchart")
-    assert land["nodes"] == len(ls.works()) + len(ls.concepts())
-    # every work appears in the landscape graph
+    assert land["edges"] > 0
+    assert mech["mermaid"].startswith("flowchart")
+
+    by_concept = land["by_concept"]
+    incidences = sum(len(v) for v in by_concept.values())
+    assert land["edges"] == incidences, (land["edges"], incidences)
+    assert land["nodes"] == incidences + len(by_concept)
+
+    # every work appears, under each concept it implements
     for w in ls.works():
-        assert f"W_{w['id']}" in land["mermaid"], w["id"]
+        for cid in w.get("concepts", []) or []:
+            assert f"W_{w['id']}__{cid}" in land["mermaid"], \
+                f"{w['id']} is missing from the {cid} group"
+        assert f"W_{w['id']}__" in land["mermaid"], w["id"]
+
+    # every concept that has works is a node in the landscape graph
+    for cid, members in by_concept.items():
+        assert f"C_{cid}" in land["mermaid"], cid
+        assert members, cid
+
     # every concept appears in the mechanism graph
     for c in ls.concepts():
         assert f"C_{c['id']}" in mech["mermaid"], c["id"]
+
+
+def test_the_landscape_graph_does_not_reuse_a_node_id():
+    """
+    A node id may appear once.
+
+    Mermaid merges a repeated definition and prints the id in place of
+    the label, which produces a picture that looks fine and says
+    nothing. The graph gives each (work, concept) pair its own id.
+    """
+    import re
+    land = ls.landscape_graph()
+    defined = re.findall(r"^\s{4}([A-Za-z0-9_\-]+)\[", land["mermaid"], re.M)
+    assert len(defined) == len(set(defined)), (
+        "a node is defined more than once: "
+        f"{[n for n in set(defined) if defined.count(n) > 1]}")
 
 
 def test_concepts_referenced_by_works_exist():

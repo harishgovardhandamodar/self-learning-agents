@@ -23,6 +23,18 @@ nav button.active { border-color:var(--acc); color:var(--acc); background:rgba(9
   border-radius:12px; color:var(--dim); white-space:nowrap; }
 .health.ok { color:var(--ok); border-color:var(--ok); }
 
+/* --------------------------------------------------- sub-tabs (within a tab) */
+.subtabs { display:flex; gap:4px; flex-wrap:wrap; margin:16px 0 14px;
+  border-bottom:1px solid var(--line); padding-bottom:0; }
+.subtabs button { background:none; border:1px solid transparent; border-bottom:none;
+  color:var(--dim); padding:8px 15px; cursor:pointer; border-radius:8px 8px 0 0;
+  font:inherit; min-height:36px; margin-bottom:-1px; }
+.subtabs button:hover { color:var(--txt); background:var(--panel2); }
+.subtabs button.active { color:var(--acc); background:var(--panel);
+  border-color:var(--line); border-bottom-color:var(--acc); }
+.lpanel { display:none; }
+.lpanel.active { display:block; }
+
 /* -------------------------------------------------------------- layout */
 main { padding:20px; max-width:1400px; margin:0 auto; }
 .tab { display:none; } .tab.active { display:block; }
@@ -206,8 +218,45 @@ h4.md-h { font-size:14px; color:var(--dim); }
 #l-add { margin-top:6px; }
 #l-add .row-btns { grid-column:1 / -1; }
 #l-graph-landscape, #l-graph-mechanism { min-height:120px; }
-#l-graph-landscape svg, #l-graph-mechanism svg { max-height:520px; }
 #l-matrix .pill.ok { color:var(--ok); border-color:var(--ok); }
+
+/* ---------------------------------------------- the graph panels and viewer */
+.graph-head { display:flex; gap:16px; align-items:flex-start; justify-content:space-between;
+  flex-wrap:wrap; margin-bottom:10px; }
+.graph-head h3 { margin:0 0 4px; font-size:15px; }
+.graph-head .hint { margin:0; }
+/* The graph panels hold an overview: the whole diagram, scaled to fit the
+   box. A fifty-node graph squeezed to the panel's width is illegible, so
+   it is capped by height instead and centred, and the enlarged view is
+   where the diagram is actually read. */
+.graph-lg { padding:14px; overflow:auto; max-height:660px; text-align:center; }
+#l-graph-landscape svg, #l-graph-mechanism svg {
+  width:auto; height:auto; max-width:100%; max-height:620px;
+  display:block; margin:0 auto; }
+.legend span { display:inline-flex; align-items:center; gap:5px; }
+
+/* the enlarged view */
+body.modal-open { overflow:hidden; }
+.modal { position:fixed; inset:0; z-index:100; background:var(--bg);
+  display:flex; flex-direction:column; }
+.modal[hidden] { display:none; }
+.modal-bar { display:flex; gap:16px; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; padding:10px 18px; background:var(--panel);
+  border-bottom:1px solid var(--line); }
+.modal-title { display:flex; flex-direction:column; line-height:1.35; }
+.modal-title .meta { font-size:12px; color:var(--dim); }
+.modal-bar .row-btns { margin:0; }
+.modal-bar button { min-height:32px; }
+.modal-canvas { flex:1 1 auto; overflow:hidden; position:relative; cursor:grab;
+  outline:none; }
+.modal-canvas.dragging { cursor:grabbing; }
+.modal-canvas:focus-visible { box-shadow:inset 0 0 0 2px var(--acc); }
+.zoom-canvas { position:absolute; top:0; left:0; transform-origin:0 0;
+  will-change:transform; }
+.zoom-canvas svg { display:block; }
+.modal-foot { display:flex; gap:18px; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; padding:8px 18px; background:var(--panel); border-top:1px solid var(--line); }
+.modal-foot .legend { margin:0; }
 
 /* --------------------------------------------------------------- misc */
 .st-done { color:var(--ok); } .st-running { color:var(--acc); }

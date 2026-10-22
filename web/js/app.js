@@ -124,8 +124,9 @@ function loadMermaid() {
  * shown instead, so the user can still read the flow and the author can
  * still fix it.
  */
-async function renderMermaid(host, src, id) {
+async function renderMermaid(host, src, id, opts) {
   if (!src) return false;
+  const natural = !!(opts && opts.natural);
   const ready = await loadMermaid();
   if (!ready) {
     host.innerHTML = `<pre class="mermaid-src">${esc(src)}</pre>`;
@@ -135,7 +136,44 @@ async function renderMermaid(host, src, id) {
     const { svg } = await window.mermaid.render(`mmd_${id || Math.random().toString(36).slice(2)}`, src);
     host.innerHTML = svg;
     const svgEl = host.querySelector("svg");
-    if (svgEl) { svgEl.removeAttribute("height"); svgEl.style.maxWidth = "100%"; }
+    if (svgEl) {
+      svgEl.removeAttribute("height");
+      if (natural) {
+        // Keep the diagram at the size mermaid drew it. Scaling it to the
+        // container is right for a small diagram and wrong for a large one:
+        // a fifty-node graph squeezed into a column is unreadable, and
+        // an unreadable overview is no overview at all.
+        //
+        // The size comes from the viewBox, and it has to be set in pixels:
+        // an SVG with no width attribute is 100% wide, which is the thing
+        // being escaped here.
+        const vb = (svgEl.getAttribute("viewBox") || "").split(/\s+/).map(Number);
+        const w = vb.length === 4 && vb[2] > 0 ? vb[2] : 0;
+        const h = vb.length === 4 && vb[3] > 0 ? vb[3] : 0;
+        svgEl.removeAttribute("width");
+        svgEl.removeAttribute("height");
+        // Not "none": the stylesheet caps the height, and a capped height
+        // with an auto height means the width is reduced with it, so the
+        // drawing keeps its shape. A fixed maximum width would letterbox
+        // the diagram instead of scaling it.
+        svgEl.style.maxWidth = "100%";
+        if (w) {
+          // The natural size goes on the attributes, not on the style, so
+          // the element keeps an intrinsic size and the stylesheet can
+          // cap it. A capped height then reduces the width with it and
+          // the drawing keeps its shape; a capped width would letterbox
+          // it instead of scaling it.
+          svgEl.setAttribute("width", w);
+          svgEl.setAttribute("height", h);
+          svgEl.style.maxWidth = "100%";
+        } else {
+          svgEl.style.width = "auto";
+          svgEl.style.height = "auto";
+        }
+      } else {
+        svgEl.style.maxWidth = "100%";
+      }
+    }
     return true;
   } catch (e) {
     host.innerHTML = `<div class="mermaid-error"><b>Diagram could not be rendered</b>
@@ -1054,6 +1092,35 @@ $("design-outline").onchange = (e) => {
 /* ------------------------------------------------------------ landscape */
 let landscapeData = null;
 
+/* ------------------------------------------------- landscape sub-tabs */
+$$(".subtabs button[data-lsub]").forEach((b) => {
+  b.onclick = () => {
+    $$(".subtabs button[data-lsub]").forEach((x) => {
+      x.classList.remove("active");
+      x.setAttribute("aria-selected", "false");
+    });
+    $$(".lpanel").forEach((x) => x.classList.remove("active"));
+    b.classList.add("active");
+    b.setAttribute("aria-selected", "true");
+    const panel = document.querySelector(`.lpanel[data-lpanel="${b.dataset.lsub}"]`);
+    if (panel) panel.classList.add("active");
+  };
+  // arrow keys move between the sub-tabs, as they do in the main strip
+  b.onkeydown = (e) => {
+    const tabs = $$(".subtabs button[data-lsub]");
+    const i = tabs.indexOf(b);
+    let j = null;
+    if (e.key === "ArrowRight") j = (i + 1) % tabs.length;
+    if (e.key === "ArrowLeft") j = (i - 1 + tabs.length) % tabs.length;
+    if (e.key === "Home") j = 0;
+    if (e.key === "End") j = tabs.length - 1;
+    if (j === null) return;
+    e.preventDefault();
+    tabs[j].focus();
+    tabs[j].click();
+  };
+});
+
 async function loadLandscape() {
   const params = new URLSearchParams();
   const q = $("l-search").value.trim();
@@ -1149,22 +1216,160 @@ function renderLandscapeWorks(works) {
 async function renderLandscapeGraphs() {
   try {
     const g = await get("/api/landscape/graph");
+    landscapeGraphs = g;
+
     const a = $("l-graph-landscape");
-    a.innerHTML = `<h4>${esc(g.landscape.title)}</h4>
-      <div class="meta">${g.landscape.nodes} nodes · ${g.landscape.edges} edges</div>`;
-    const body = document.createElement("div");
-    a.appendChild(body);
-    await renderMermaid(body, g.landscape.mermaid, "ls_landscape");
+    $("l-landscape-title").textContent = g.landscape.title;
+    $("l-landscape-meta").textContent =
+      `${g.landscape.nodes} nodes · ${g.landscape.edges} edges · `
+      + "each mechanism heads a box, and the works that implement it sit "
+      + "below it. A work that implements three mechanisms appears three "
+      + "times, once under each.";
+    a.innerHTML = "";
+    await renderMermaid(a, g.landscape.mermaid, "ls_landscape", { natural: true });
+    $("l-landscape-legend").innerHTML = graphLegend(g.landscape.concepts, true);
 
     const b = $("l-graph-mechanism");
-    b.innerHTML = `<h4>${esc(g.mechanism.title)}</h4>
-      <div class="meta">surfaces: ${g.mechanism.surfaces.map(esc).join(", ")}</div>`;
-    const body2 = document.createElement("div");
-    b.appendChild(body2);
-    await renderMermaid(body2, g.mechanism.mermaid, "ls_mechanism");
+    $("l-mechanism-title").textContent = g.mechanism.title;
+    $("l-mechanism-meta").textContent =
+      `${g.mechanism.surfaces.length} surfaces · `
+      + "the same concepts, grouped by the part of the harness they change. "
+      + "Read it as: when an agent of this kind improves, this is what it rewrites.";
+    b.innerHTML = "";
+    await renderMermaid(b, g.mechanism.mermaid, "ls_mechanism", { natural: true });
+    $("l-mechanism-legend").innerHTML = graphLegend(g.mechanism.concepts, false, true);
   } catch (e) {
     $("l-graph-landscape").innerHTML = `<div class="empty">${esc(e.message || e)}</div>`;
   }
+}
+
+/* The node colours, matching the classDefs the backend emits. */
+const GRAPH_KINDS = [
+  ["work", "work", "#5aa9ff"],
+  ["paradigm", "paradigm", "#4cc38a"],
+  ["mechanism", "mechanism", "#ffb020"],
+  ["problem", "problem", "#ff6b6b"],
+  ["practice", "practice", "#b98cff"],
+];
+
+function graphLegend(concepts, withWork, withSurface) {
+  const kinds = new Set((concepts || []).map((c) => c.kind || "mechanism"));
+  const parts = [];
+  if (withSurface) {
+    parts.push(`<span><i style="background:#ffb020;border:1px solid #d7dee9"></i>surface</span>`);
+  }
+  GRAPH_KINDS
+    .filter(([id]) => (withWork ? id === "work" || kinds.has(id) : kinds.has(id)))
+    .forEach(([, label, colour]) =>
+      parts.push(`<span><i style="background:${colour}"></i>${esc(label)}</span>`));
+  return parts.join("");
+}
+
+/* ------------------------------------------------------- enlarge a graph */
+
+let landscapeGraphs = null;
+let modalState = { zoom: 1, x: 0, y: 0, natural: { w: 0, h: 0 } };
+
+function openGraph(which) {
+  if (!landscapeGraphs) return;
+  const g = which === "mechanism"
+    ? landscapeGraphs.mechanism
+    : landscapeGraphs.landscape;
+  const modal = $("graph-modal");
+  $("gm-title").textContent = g.title;
+  $("gm-meta").textContent = which === "mechanism"
+    ? `${g.surfaces.length} surfaces`
+    : `${g.nodes} nodes · ${g.edges} edges`;
+  $("gm-legend").innerHTML = graphLegend(g.concepts, which !== "mechanism", which === "mechanism");
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+
+  const host = $("gm-zoom");
+  host.innerHTML = "";
+  renderMermaid(host, g.mermaid, `gm_${which}`).then(() => {
+    const svg = host.querySelector("svg");
+    if (!svg) return;
+    // The natural size comes from the viewBox; the SVG is then laid out at
+    // that size so the zoom transform has something real to scale.
+    const vb = (svg.getAttribute("viewBox") || "").split(/\s+/).map(Number);
+    const w = vb.length === 4 && vb[2] > 0 ? vb[2] : svg.clientWidth || 1200;
+    const h = vb.length === 4 && vb[3] > 0 ? vb[3] : svg.clientHeight || 800;
+    modalState.natural = { w, h };
+    svg.removeAttribute("height");
+    svg.removeAttribute("width");
+    svg.style.width = `${w}px`;
+    svg.style.height = `${h}px`;
+    svg.style.maxWidth = "none";
+    svg.style.flex = "none";
+    fitWidth();
+  });
+  $("gm-close").focus();
+}
+
+function closeGraph() {
+  $("graph-modal").hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+function applyGraphTransform() {
+  const s = modalState;
+  $("gm-zoom").style.transform =
+    `translate(${s.x}px, ${s.y}px) scale(${s.zoom})`;
+  $("gm-zoom-label").textContent = `${Math.round(s.zoom * 100)}%`;
+}
+
+/**
+ * Fit the width, leave the height to be panned.
+ *
+ * Fitting the whole graph is the wrong default for a diagram with fifty
+ * nodes: everything ends up at fourteen percent, which shows the shape
+ * and nothing else. Fitting the width keeps the labels legible, and the
+ * height is one drag away.
+ */
+function fitWidth() {
+  const canvas = $("gm-canvas");
+  const { w, h } = modalState.natural;
+  if (!w || !h) return;
+  const pad = 24;
+  const z = Math.min(Math.max((canvas.clientWidth - pad) / w, 0.05), 4);
+  modalState.zoom = z;
+  modalState.x = (canvas.clientWidth - w * z) / 2;
+  // a graph shorter than the canvas is centred; a taller one starts at
+  // the top, because centring it would hide the first thing to read
+  const drawn = h * z;
+  modalState.y = drawn < canvas.clientHeight
+    ? (canvas.clientHeight - drawn) / 2
+    : 0;
+  applyGraphTransform();
+}
+
+/** Fit the whole graph: the overview, at the cost of legibility. */
+function fitGraph() {
+  const canvas = $("gm-canvas");
+  const { w, h } = modalState.natural;
+  if (!w || !h) return;
+  const pad = 24;
+  const z = Math.min(
+    (canvas.clientWidth - pad) / w,
+    (canvas.clientHeight - pad) / h
+  );
+  modalState.zoom = Math.min(Math.max(z, 0.05), 4);
+  modalState.x = (canvas.clientWidth - w * modalState.zoom) / 2;
+  modalState.y = (canvas.clientHeight - h * modalState.zoom) / 2;
+  applyGraphTransform();
+}
+
+function zoomGraph(factor) {
+  const canvas = $("gm-canvas");
+  const s = modalState;
+  const next = Math.min(Math.max(s.zoom * factor, 0.05), 8);
+  // keep the point under the centre of the view fixed while zooming
+  const cx = canvas.clientWidth / 2;
+  const cy = canvas.clientHeight / 2;
+  s.x = cx - (cx - s.x) * (next / s.zoom);
+  s.y = cy - (cy - s.y) * (next / s.zoom);
+  s.zoom = next;
+  applyGraphTransform();
 }
 
 function landscapeFilters() {
@@ -1257,6 +1462,66 @@ function debounce(fn, ms) {
     t = setTimeout(() => fn(...args), ms);
   };
 }
+
+/* -------------------------------------------- the enlarged graph viewer */
+$$("[data-enlarge]").forEach((b) => {
+  b.onclick = () => openGraph(b.dataset.enlarge);
+});
+$("gm-close").onclick = closeGraph;
+$("gm-zoom-in").onclick = () => zoomGraph(1.25);
+$("gm-zoom-out").onclick = () => zoomGraph(1 / 1.25);
+$("gm-fit").onclick = fitGraph;
+$("gm-fitw").onclick = fitWidth;
+$("gm-actual").onclick = () => {
+  modalState.zoom = 1;
+  modalState.x = 0;
+  modalState.y = 0;
+  applyGraphTransform();
+};
+$("graph-modal").addEventListener("click", (e) => {
+  // a click on the backdrop closes; a click inside does not
+  if (e.target === $("graph-modal") || e.target === $("gm-canvas")) closeGraph();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("graph-modal").hidden) closeGraph();
+});
+
+// pan and zoom on the canvas
+(() => {
+  const canvas = $("gm-canvas");
+  let dragging = false;
+  let last = { x: 0, y: 0 };
+
+  canvas.addEventListener("mousedown", (e) => {
+    dragging = true;
+    last = { x: e.clientX, y: e.clientY };
+    canvas.classList.add("dragging");
+  });
+  window.addEventListener("mouseup", () => {
+    dragging = false;
+    canvas.classList.remove("dragging");
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+    modalState.x += e.clientX - last.x;
+    modalState.y += e.clientY - last.y;
+    last = { x: e.clientX, y: e.clientY };
+    applyGraphTransform();
+  });
+  canvas.addEventListener("wheel", (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      zoomGraph(e.deltaY < 0 ? 1.12 : 1 / 1.12);
+    } else {
+      modalState.x -= e.deltaX;
+      modalState.y -= e.deltaY;
+      applyGraphTransform();
+    }
+  }, { passive: false });
+  window.addEventListener("resize", () => {
+    if (!$("graph-modal").hidden) fitGraph();
+  });
+})();
 
 /* ------------------------------------------------------------- patterns */
 $("p-domain").onchange = loadPatterns;

@@ -407,11 +407,16 @@ measure interference or does not hold anything out.
 That is the gap this lab exists to work in: a field full of claims that
 nothing in the field is set up to check.
 
-Two knowledge graphs are generated from the same data: the **landscape
-graph** (works grouped by kind, and the concepts they implement) and the
-**mechanism graph** (the concepts grouped by what they rewrite). The tab
-also *collects*: `POST /api/landscape/works` adds a work to the local
-knowledge base, and it joins the matrix and the graphs.
+Two knowledge graphs are generated from the same data — the **landscape
+graph** (each mechanism heads a box, and the works that implement it sit
+below it) and the **mechanism graph** (the concepts grouped by what they
+rewrite) — so the pictures cannot disagree with the table.
+
+Both are sub-tabs at the same level as the alignment matrix, and both
+have an **enlarged view**: the whole screen, with pan, zoom, *fit width*,
+*fit* and *1:1*, so a fifty-node graph can be read without leaving the
+page. The tab also *collects*: `POST /api/landscape/works` adds a work to
+the local knowledge base, and it joins the matrix and the graphs.
 
 ## Key measurements (simulated policy, block 20 / eval 30, 20 iterations)
 

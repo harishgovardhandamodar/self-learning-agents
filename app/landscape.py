@@ -199,61 +199,94 @@ def search(q: str = "", kind: str = "", surface: str = "",
 
 def landscape_graph() -> Dict[str, Any]:
     """
-    The landscape graph: works and the concepts they implement.
+    The landscape graph: the mechanisms, and the works that implement them.
 
-    Node kinds are work and concept; edges are typed (implements,
-    extends, contradicts). The works are grouped by kind so the picture has a
-    shape a reader can follow rather than 46 boxes in a column. Mermaid source
-    is returned alongside the data so the diagram and the table cannot
-    disagree.
+    The shape matters as much as the content. Laid out as "each work
+    points at the concepts it implements", thirty-six works and fifteen
+    concepts render as a single column over five thousand pixels tall - a
+    picture nobody can read, and one an enlarged view cannot rescue.
+
+    So each concept gets a box of its own: the concept heads it, the
+    works that implement it sit below it, and an edge runs from the
+    concept to each of them. The picture answers a question the flat form
+    cannot - *what implements this mechanism?* - and the aspect comes out
+    close to a page, which is what makes the enlarged view worth having.
+
+    A work that implements three mechanisms appears in three boxes, under
+    a node id of its own each time. Reusing one id would make mermaid
+    merge the definitions and print the node's id in place of its label,
+    which is exactly the kind of quietly wrong picture this lab does not
+    ship.
+
+    Mermaid source is returned alongside the data so the diagram and the
+    table cannot disagree.
     """
     idx = concept_index()
     ws = works()
-    by_kind: Dict[str, List[Dict[str, Any]]] = {}
-    for w in ws:
-        by_kind.setdefault(w.get("kind", "other"), []).append(w)
 
-    lines = ["flowchart LR"]
-    for c in concepts():
-        label = esc(c.get("label", c["id"]))
-        lines.append(f'  C_{c["id"]}["{label}<br/><small>{c.get("kind", "")}</small>"]')
-    for kind, members in sorted(by_kind.items()):
-        lines.append(f'  subgraph K_{kind}["{esc(kind)}"]')
-        lines.append("    direction TB")
-        for w in members:
-            wid = w.get("id", "")
-            lines.append(f'    W_{wid}["{esc(w.get("title", wid)[:42])}<br/>'
-                         f'<small>{w.get("year", "")}</small>"]')
-        lines.append("  end")
+    # which works implement which concept
+    by_concept: Dict[str, List[Dict[str, Any]]] = {}
     for w in ws:
-        wid = w.get("id", "")
         for cid in w.get("concepts", []) or []:
             if cid in idx:
-                lines.append(f"  W_{wid} -->|implements| C_{cid}")
+                by_concept.setdefault(cid, []).append(w)
+
+    lines = ["flowchart TB"]
+    work_nodes: List[str] = []
+    edges = 0
+
     for c in concepts():
-        for rel in c.get("related", []) or []:
-            if rel in idx:
-                lines.append(f"  C_{c['id']} -.->|related| C_{rel}")
+        cid = c["id"]
+        members = by_concept.get(cid, [])
+        if not members:
+            continue
+        label = esc(c.get("label", cid))
+        kind = esc(c.get("kind", ""))
+        lines.append(f'  subgraph G_{cid}[" "]')
+        lines.append("    direction TB")
+        lines.append(f'    C_{cid}["{label}<br/><small>{kind}</small>"]')
+        for w in members:
+            wid = w.get("id", "")
+            node = f"W_{wid}__{cid}"
+            work_nodes.append(node)
+            title = esc(w.get("title", wid)[:28])
+            wkind = esc(w.get("kind", ""))
+            lines.append(f'    {node}["{title}<br/><small>{wkind}</small>"]')
+        lines.append("  end")
+        lines.append(f"  style G_{cid} fill:#141922,stroke:#2a3140,color:#d7dee9")
+        for w in members:
+            lines.append(f"  C_{cid} --> W_{w.get('id','')}__{cid}")
+            edges += 1
+
+    # the chain holds the boxes in a readable order
+    spine = [c["id"] for c in concepts() if by_concept.get(c["id"])]
+    for a, b in zip(spine, spine[1:]):
+        lines.append(f"  G_{a} ~~~ G_{b}")
+
     lines.append("  classDef work fill:#16283a,stroke:#5aa9ff,color:#d7dee9;")
     lines.append("  classDef paradigm fill:#1d3a2a,stroke:#4cc38a,color:#d7dee9;")
     lines.append("  classDef mechanism fill:#3a2a1d,stroke:#ffb020,color:#d7dee9;")
     lines.append("  classDef problem fill:#3a1d1d,stroke:#ff6b6b,color:#d7dee9;")
     lines.append("  classDef practice fill:#2a2340,stroke:#b98cff,color:#d7dee9;")
-    work_ids = ",".join(f"W_{w.get('id','')}" for w in ws)
-    if work_ids:
-        lines.append(f"  class {work_ids} work;")
+    if work_nodes:
+        lines.append("  class " + ",".join(work_nodes) + " work;")
     by_concept_kind: Dict[str, List[str]] = {}
-    for c in concepts():
-        by_concept_kind.setdefault(c.get("kind", "mechanism"), []).append(f"C_{c['id']}")
+    for cid in spine:
+        c = idx[cid]
+        by_concept_kind.setdefault(c.get("kind", "mechanism"), []).append(f"C_{cid}")
     for kind, members in by_concept_kind.items():
         lines.append("  class " + ",".join(members) + f" {kind};")
+
     return {
-        "title": "The landscape: works and the mechanisms they implement",
+        "title": "The landscape: the mechanisms, and the works that implement them",
         "mermaid": "\n".join(lines),
-        "nodes": len(ws) + len(concepts()),
-        "edges": sum(len(w.get("concepts", []) or []) for w in ws),
+        "nodes": len(work_nodes) + len(spine),
+        "edges": edges,
         "concepts": concepts(),
+        "by_concept": {cid: [w.get("id") for w in m]
+                       for cid, m in by_concept.items()},
     }
+
 
 
 def mechanism_graph() -> Dict[str, Any]:

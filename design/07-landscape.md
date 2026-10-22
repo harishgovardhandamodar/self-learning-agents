@@ -141,12 +141,70 @@ never disagree with the numbers.
 
 | graph | nodes | edges | question it answers |
 |---|---|---|---|
-| **landscape** | works + concepts | `implements` | what is this area actually made of? |
+| **landscape** | works + concepts | `implements` | what implements this mechanism? |
 | **mechanism** | concepts, grouped by `surface` | `groups` | what kind of thing is being changed? |
 
-The landscape graph groups the works by kind — papers, products,
-frameworks, writeups — so the picture has a shape a reader can follow
-rather than forty-six boxes in a column.
+### The landscape graph's shape
+
+The shape of a picture matters as much as its content, and mermaid does
+not give it for free. Laid out as "each work points at the concepts it
+implements", thirty-six works and fifteen concepts render as a single
+column over five thousand pixels tall — a picture nobody can read, and
+one an enlarged view cannot rescue.
+
+So each concept gets a box of its own: the concept heads it, the works
+that implement it sit below it, and an edge runs from the concept to each
+of them. The result is 3657 × 3175 — close to a page, and the question it
+answers is the better one.
+
+```mermaid
+flowchart LR
+  subgraph ONE["a concept's box"]
+    direction TB
+    C["the mechanism<br/><small>its kind</small>"]
+    W1["a work that implements it"]
+    W2["another one"]
+    C --> W1
+    C --> W2
+  end
+  W2 -.->|"the same work appears<br/>under every concept it implements"| ONE
+```
+
+A work that implements three mechanisms appears in three boxes, under a
+node id of its own each time. Reusing one id makes mermaid merge the
+definitions and print the node's id in place of its label — a picture
+that looks fine and says nothing. A test now checks that no node is
+defined twice.
+
+## How it is presented
+
+The Landscape tab is a set of sub-tabs at the same level as the alignment
+matrix, because the matrix and the graphs are two views of the same
+facts and neither is subordinate to the other.
+
+| sub-tab | what it is |
+|---|---|
+| **Alignment matrix** | one row per work, one column per axis |
+| **Landscape graph** | the mechanisms, and the works that implement them |
+| **Mechanisms by surface** | the concepts, grouped by what they rewrite |
+| **Works** | each work as the source states it |
+| **Add a work** | grow the knowledge base |
+
+Each graph is shown twice, at two scales, and the second is the reason
+the first is allowed to be small.
+
+- **In the panel** the diagram is scaled to fit the box — an overview.
+  A fifty-node graph squeezed to the panel's width lands at thirty
+  percent, which shows the shape and nothing else, so the box is capped
+  by height instead and the drawing keeps its aspect.
+- **Enlarged** it takes the whole screen, at a zoom that keeps the
+  labels legible, with pan, zoom, *fit width*, *fit* and *1:1* to choose
+  how much of it you want to see at once.
+
+The enlarged view is the one that has to be right: it is a full-window
+surface with a graph that is genuinely larger than the thumbnail, and it
+degrades to a drag and a scroll if the graph is bigger than the screen.
+
 
 ## Module
 

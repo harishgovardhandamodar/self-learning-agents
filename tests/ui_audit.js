@@ -211,12 +211,77 @@ const note = (kind, msg, extra = {}) => problems.push({ kind, msg, ...extra });
   if (landRows < 10) note('ux', `landscape matrix lists only ${landRows} works`);
   const landCols = await page.$$eval('#l-matrix thead th', (els) => els.length);
   if (landCols < 6) note('ux', `landscape matrix has ${landCols} columns`);
-  const landGraphs = await page.$$eval('#l-graph-landscape svg, #l-graph-mechanism svg', (els) => els.length);
-  if (landGraphs < 2) note('ux', `landscape knowledge graphs rendered ${landGraphs}/2`);
-  await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-landscape.png`), fullPage: true });
+
+  // the sub-tabs, at the same level as the alignment matrix
+  const subs = await page.$$eval('.subtabs button[data-lsub]', (els) =>
+    els.map((e) => e.dataset.lsub));
+  for (const want of ['matrix', 'landscape', 'mechanism', 'works', 'add']) {
+    if (!subs.includes(want)) note('ux', `the landscape tab has no "${want}" sub-tab`);
+  }
+  const activePanel = async () => page.$$eval('.lpanel.active', (els) =>
+    els.map((e) => e.dataset.lpanel));
+  for (const key of subs) {
+    await page.click(`.subtabs button[data-lsub="${key}"]`);
+    await page.waitForTimeout(900);
+    const shown = await activePanel();
+    if (shown.length !== 1 || shown[0] !== key) {
+      note('ux', `the "${key}" sub-tab shows ${shown.join(',') || 'nothing'}`);
+    }
+  }
+
+  // the two graphs, and the enlarged view for each
+  for (const key of ['landscape', 'mechanism']) {
+    await page.click(`.subtabs button[data-lsub="${key}"]`);
+    await page.waitForTimeout(1600);
+    const svgs = await page.$$eval(`.lpanel[data-lpanel="${key}"] svg`, (e) => e.length);
+    if (!svgs) note('ux', `the ${key} graph did not render`);
+    const box = await page.$eval(`#l-graph-${key} svg`, (e) => {
+      const r = e.getBoundingClientRect();
+      return { w: r.width, h: r.height, ar: r.width / Math.max(r.height, 1) };
+    }).catch(() => null);
+    if (box && box.h > 0) {
+      // a squashed diagram is a broken diagram
+      const vb = await page.$eval(`#l-graph-${key} svg`, (e) => {
+        const v = (e.getAttribute('viewBox') || '').split(/\s+/).map(Number);
+        return v.length === 4 ? v[2] / v[3] : 0;
+      });
+      if (vb && Math.abs(box.ar - vb) / vb > 0.05) {
+        note('ux', `the ${key} graph is distorted (${box.ar.toFixed(2)} vs ${vb.toFixed(2)})`);
+      }
+    }
+    await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-landscape-${key}.png`), fullPage: true });
+
+    // the enlarged view
+    await page.click(`[data-enlarge="${key}"]`);
+    await page.waitForTimeout(2200);
+    const open = await page.$eval('#graph-modal', (e) => !e.hidden);
+    if (!open) note('ux', `the ${key} graph did not open enlarged`);
+    const bigSvg = await page.$$eval('#gm-zoom svg', (e) => e.length);
+    if (!bigSvg) note('ux', `the enlarged ${key} graph has no diagram`);
+    // it must be bigger than the inline one, or "enlarge" is a lie
+    const zoom = await page.textContent('#gm-zoom-label');
+    if (zoom && parseInt(zoom) <= 0) note('ux', `the enlarged ${key} graph is at ${zoom}`);
+    await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-enlarged-${key}.png`) });
+    // the zoom controls
+    await page.click('#gm-zoom-in');
+    await page.waitForTimeout(250);
+    const zoomed = await page.textContent('#gm-zoom-label');
+    if (zoomed === zoom) note('ux', 'the zoom in button did nothing');
+    await page.click('#gm-fit');
+    await page.waitForTimeout(250);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+    if (!(await page.$eval('#graph-modal', (e) => e.hidden))) {
+      note('ux', 'escape did not close the enlarged view');
+    }
+  }
+  await page.click('.subtabs button[data-lsub="matrix"]');
+  await page.waitForTimeout(600);
 
   // The audit adds a work to check the form works, then removes it again.
   // An audit that leaves litter in the knowledge base is not an audit.
+  await page.click('.subtabs button[data-lsub="add"]');
+  await page.waitForTimeout(700);
   await page.fill('#l-title', 'Audit probe work');
   await page.fill('#l-summary', 'added by the ui audit, then removed');
   await page.fill('#l-mechanism', 'none');

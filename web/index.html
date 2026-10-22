@@ -357,29 +357,65 @@
       <button id="l-reset" class="small ghost">Reset</button>
     </div>
 
-    <h3>Alignment matrix</h3>
-    <p class="hint">One row per work, one column per axis. A work whose protocol
-      measures nothing under drift cannot have its own claims falsified &mdash;
-      that is the last column.</p>
-    <div id="l-matrix" class="table-wrap"></div>
-
-    <h3>Works</h3>
-    <div id="l-works" class="cards"></div>
-
-    <h3>Knowledge graphs</h3>
-    <div class="row">
-      <div class="col">
-        <div id="l-graph-landscape" class="chart"></div>
-      </div>
-      <div class="col">
-        <div id="l-graph-mechanism" class="chart"></div>
-      </div>
+    <div class="subtabs" role="tablist" aria-label="Landscape views">
+      <button data-lsub="matrix" class="active" role="tab" aria-selected="true">Alignment matrix</button>
+      <button data-lsub="landscape" role="tab" aria-selected="false">Landscape graph</button>
+      <button data-lsub="mechanism" role="tab" aria-selected="false">Mechanisms by surface</button>
+      <button data-lsub="works" role="tab" aria-selected="false">Works</button>
+      <button data-lsub="add" role="tab" aria-selected="false">Add a work</button>
     </div>
 
-    <h3>Add a work</h3>
-    <p class="hint">Found something the shipped landscape is missing? Add it and
-      it joins the knowledge base, the matrix and the graphs.</p>
-    <form id="l-add" class="grid2">
+    <div class="lpanel active" data-lpanel="matrix" role="tabpanel">
+      <p class="hint">One row per work, one column per axis. A work whose protocol
+        measures nothing under drift cannot have its own claims falsified &mdash;
+        that is the last column.</p>
+      <div id="l-matrix" class="table-wrap"></div>
+    </div>
+
+    <div class="lpanel" data-lpanel="landscape" role="tabpanel">
+      <div class="graph-head">
+        <div>
+          <h3 id="l-landscape-title">The landscape: the mechanisms, and the works that implement them</h3>
+          <p class="hint" id="l-landscape-meta">Each mechanism heads a box, and
+            the works that implement it sit below it. An edge means the work
+            implements that mechanism &mdash; it is not a citation.</p>
+        </div>
+        <div class="row-btns">
+          <button class="small ghost" data-enlarge="landscape" aria-label="Enlarge the landscape graph">Enlarge &squarr;</button>
+        </div>
+      </div>
+      <div id="l-graph-landscape" class="chart graph-lg"></div>
+      <div class="legend" id="l-landscape-legend"></div>
+    </div>
+
+    <div class="lpanel" data-lpanel="mechanism" role="tabpanel">
+      <div class="graph-head">
+        <div>
+          <h3 id="l-mechanism-title">Mechanisms grouped by what they rewrite</h3>
+          <p class="hint" id="l-mechanism-meta">The same concepts, grouped by the
+            part of the harness they change. Read it as: when an agent of this
+            kind improves, <em>this</em> is what it rewrites.</p>
+        </div>
+        <div class="row-btns">
+          <button class="small ghost" data-enlarge="mechanism" aria-label="Enlarge the mechanism graph">Enlarge &squarr;</button>
+        </div>
+      </div>
+      <div id="l-graph-mechanism" class="chart graph-lg"></div>
+      <div class="legend" id="l-mechanism-legend"></div>
+    </div>
+
+    <div class="lpanel" data-lpanel="works" role="tabpanel">
+      <p class="hint">Each work as the source states it, with the lab's
+        assessment underneath. The source link goes to the work itself.</p>
+      <div id="l-works" class="cards"></div>
+    </div>
+
+    <div class="lpanel" data-lpanel="add" role="tabpanel">
+      <p class="hint">Found something the shipped landscape is missing? Add it and
+        it joins the knowledge base, the matrix and the graphs. The two text
+        fields are the source's own words; the three selects are this lab's
+        assessment, and may be left unknown.</p>
+      <form id="l-add" class="grid2">
       <label for="l-title">Title<input id="l-title" required placeholder="Paper, product or writeup"></label>
       <label for="l-kind-add">Kind
         <select id="l-kind-add">
@@ -400,13 +436,13 @@
         <input id="l-summary" placeholder="one line"></label>
       <label for="l-mechanism">Mechanism (source fact)
         <input id="l-mechanism" placeholder="what changes, and how"></label>
-      <label for="l-surface-add">What it rewrites (lab assessment)
+      <label for="l-surface-add" title="lab assessment">What it rewrites
         <select id="l-surface-add"></select>
       </label>
-      <label for="l-eval-add">Degradation measured (lab assessment)
+      <label for="l-eval-add" title="lab assessment">Degradation measured
         <select id="l-eval-add"></select>
       </label>
-      <label for="l-holdout-add">Disjoint hold-out (lab assessment)
+      <label for="l-holdout-add" title="lab assessment">Disjoint hold-out
         <select id="l-holdout-add"></select>
       </label>
       <label for="l-concepts-add">Concepts (comma separated)
@@ -416,7 +452,36 @@
         <span id="l-add-msg" class="msg" role="status" aria-live="polite"></span>
       </div>
     </form>
+    </div>
   </section>
+
+  <!-- ======================================================= ENLARGE VIEW -->
+  <div id="graph-modal" class="modal" hidden role="dialog" aria-modal="true"
+       aria-labelledby="gm-title">
+    <div class="modal-bar">
+      <div class="modal-title">
+        <strong id="gm-title">Diagram</strong>
+        <span class="meta" id="gm-meta"></span>
+      </div>
+      <div class="row-btns">
+        <span class="meta" id="gm-zoom-label">100%</span>
+        <button class="small ghost" id="gm-zoom-out" aria-label="Zoom out">&minus;</button>
+        <button class="small ghost" id="gm-zoom-in" aria-label="Zoom in">+</button>
+        <button class="small ghost" id="gm-fitw">Fit width</button>
+        <button class="small ghost" id="gm-fit">Fit</button>
+        <button class="small ghost" id="gm-actual">1:1</button>
+        <button class="small" id="gm-close" aria-label="Close the enlarged view">Close</button>
+      </div>
+    </div>
+    <div class="modal-canvas" id="gm-canvas" tabindex="0"
+         aria-label="The diagram. Drag to pan, and use the zoom buttons to resize.">
+      <div class="zoom-canvas" id="gm-zoom"></div>
+    </div>
+    <div class="modal-foot">
+      <span class="meta">Drag to pan &middot; scroll to pan &middot; ctrl+scroll to zoom</span>
+      <span class="legend" id="gm-legend"></span>
+    </div>
+  </div>
 </main>
 <script src="/static/vendor/mermaid.min.js"></script>
 <script src="/static/js/markdown.js"></script>
