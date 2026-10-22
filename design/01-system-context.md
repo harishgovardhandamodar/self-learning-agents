@@ -24,7 +24,7 @@ flowchart TB
 
   subgraph SYS["Self-Learning Agent Lab (this app)"]
     DASH["Dashboard SPA<br/>designs · runs · compare · reference<br/>coverage · suite · patterns · design"]
-    API["FastAPI service<br/>35 endpoints"]
+    API["FastAPI service<br/>40 endpoints"]
   end
 
   subgraph EXT["External knowledge (static, versioned)"]

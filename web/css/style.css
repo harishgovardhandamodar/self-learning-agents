@@ -192,6 +192,20 @@ h4.md-h { font-size:14px; color:var(--dim); }
 .md-table th:first-child { text-align:left; color:var(--txt); font-weight:600; }
 .doc a { color:var(--acc); }
 
+/* ------------------------------------------------------------ landscape */
+.filter.wide { max-width:340px; }
+#l-matrix table.cmp { min-width:1100px; }
+#l-matrix td:first-child { min-width:240px; }
+#l-matrix .pill { white-space:nowrap; }
+#l-works { max-height:none; }
+#l-works .card p { margin:5px 0; }
+#l-works a { color:var(--acc); }
+#l-add { margin-top:6px; }
+#l-add .row-btns { grid-column:1 / -1; }
+#l-graph-landscape, #l-graph-mechanism { min-height:120px; }
+#l-graph-landscape svg, #l-graph-mechanism svg { max-height:520px; }
+#l-matrix .pill.ok { color:var(--ok); border-color:var(--ok); }
+
 /* --------------------------------------------------------------- misc */
 .st-done { color:var(--ok); } .st-running { color:var(--acc); }
 .st-error { color:var(--bad); } .st-cancelled { color:var(--dim); }

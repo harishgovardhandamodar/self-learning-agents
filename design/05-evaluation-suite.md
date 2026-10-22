@@ -40,7 +40,7 @@ flowchart TB
   end
 
   subgraph SURFACE["Surface"]
-    API["main.py<br/>35 endpoints"]
+    API["main.py<br/>40 endpoints"]
     WEB["web/<br/>8 tabs"]
   end
 

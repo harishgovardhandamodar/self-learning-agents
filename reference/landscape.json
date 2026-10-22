@@ -1,0 +1,990 @@
+{
+  "version": "2026-10",
+  "note": "Curated knowledge base. Source facts (title, venue, one-line summary, mechanism) are stated as the work describes itself. The alignment columns are this lab's assessment and are labelled as such in the UI. Identifiers are given where verified; where an identifier is not verified, the url is a search that always resolves.",
+  "dimensions": [
+    {
+      "id": "surface",
+      "label": "What it rewrites",
+      "question": "Which part of the harness changes when the agent learns?",
+      "options": [
+        "nothing",
+        "prompt",
+        "memory",
+        "skills",
+        "workflow",
+        "code",
+        "weights",
+        "unknown"
+      ]
+    },
+    {
+      "id": "isolation",
+      "label": "Learning isolated per task family",
+      "question": "Is what the agent learned kept from being applied to a task family it was not learned on?",
+      "options": [
+        "n/a",
+        "yes",
+        "partial",
+        "no",
+        "unknown"
+      ]
+    },
+    {
+      "id": "retrieval",
+      "label": "How a stored experience is matched",
+      "question": "When the agent recalls something, what decides that it applies?",
+      "options": [
+        "none",
+        "similarity",
+        "intent",
+        "explicit key",
+        "cluster + workflow",
+        "unknown"
+      ]
+    },
+    {
+      "id": "evaluation",
+      "label": "Degradation measured",
+      "question": "Does the work measure interference or forgetting across a changing task stream?",
+      "options": [
+        "no",
+        "partial",
+        "yes",
+        "unknown"
+      ]
+    },
+    {
+      "id": "holdout",
+      "label": "Disjoint hold-out",
+      "question": "Is the agent graded on instances it was not trained on?",
+      "options": [
+        "no",
+        "yes",
+        "unknown"
+      ]
+    },
+    {
+      "id": "evidence",
+      "label": "Evidence kind",
+      "question": "What kind of source is this?",
+      "options": [
+        "peer-reviewed",
+        "preprint",
+        "vendor writeup",
+        "blog",
+        "open source",
+        "unknown"
+      ]
+    }
+  ],
+  "concepts": [
+    {
+      "id": "self-improvement",
+      "label": "Self-improvement",
+      "kind": "paradigm",
+      "gloss": "The agent changes something about itself - the code, the prompt, the memory - and is judged on the result."
+    },
+    {
+      "id": "experience-replay",
+      "label": "Experience replay",
+      "kind": "mechanism",
+      "gloss": "Past episodes are stored and replayed as guidance for a later task."
+    },
+    {
+      "id": "reflection",
+      "label": "Reflection",
+      "kind": "mechanism",
+      "gloss": "The agent writes an account of what went wrong, and that text is what it uses next time."
+    },
+    {
+      "id": "skill-library",
+      "label": "Skill library",
+      "kind": "mechanism",
+      "gloss": "Reusable capabilities are accumulated as named, retrievable units."
+    },
+    {
+      "id": "memory-management",
+      "label": "Memory management",
+      "kind": "mechanism",
+      "gloss": "What the agent keeps, and how it decides what fits in its working context."
+    },
+    {
+      "id": "prompt-optimisation",
+      "label": "Prompt optimisation",
+      "kind": "mechanism",
+      "gloss": "The prompt or program is compiled from data and feedback rather than written by hand."
+    },
+    {
+      "id": "verifier-feedback",
+      "label": "Verifier feedback",
+      "kind": "mechanism",
+      "gloss": "A checker, grader or environment decides success, and only success is learned from."
+    },
+    {
+      "id": "continual-learning",
+      "label": "Continual learning",
+      "kind": "paradigm",
+      "gloss": "Learning over a stream that keeps changing, with interference and forgetting as the cost."
+    },
+    {
+      "id": "catastrophic-forgetting",
+      "label": "Catastrophic forgetting",
+      "kind": "problem",
+      "gloss": "Learning a new family overwrites what was learned for an old one."
+    },
+    {
+      "id": "transfer",
+      "label": "Transfer",
+      "kind": "problem",
+      "gloss": "What is learned for one family is useful, or harmful, for another."
+    },
+    {
+      "id": "harness",
+      "label": "Harness engineering",
+      "kind": "practice",
+      "gloss": "The scaffolding around the model - tools, prompts, state - treated as the artefact under optimisation."
+    },
+    {
+      "id": "agent-computer",
+      "label": "Agent-computer interface",
+      "kind": "mechanism",
+      "gloss": "The action space and the feedback are redesigned so the model can act well."
+    },
+    {
+      "id": "test-time-adaptation",
+      "label": "Test-time adaptation",
+      "kind": "paradigm",
+      "gloss": "The system adapts at inference time rather than at training time."
+    },
+    {
+      "id": "self-refine-loop",
+      "label": "Self-refine loop",
+      "kind": "mechanism",
+      "gloss": "Generate, critique, revise, repeat within a single task."
+    },
+    {
+      "id": "credit-assignment",
+      "label": "Credit assignment",
+      "kind": "problem",
+      "gloss": "Deciding which part of a long trajectory deserves credit."
+    }
+  ],
+  "works": [
+    {
+      "id": "react",
+      "kind": "paper",
+      "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+      "authors": "S. Yao et al.",
+      "venue": "ICLR 2023",
+      "year": 2023,
+      "url": "https://arxiv.org/abs/2210.03629",
+      "summary": "Interleaves reasoning traces with actions so the model plans while it acts.",
+      "mechanism": "No learning: the same prompt drives every episode, with observations appended to the trace.",
+      "align": {
+        "surface": "nothing",
+        "isolation": "n/a",
+        "retrieval": "none",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "peer-reviewed"
+      },
+      "concepts": [
+        "agent-computer",
+        "self-refine-loop"
+      ],
+      "patterns": [
+        "react"
+      ]
+    },
+    {
+      "id": "reflexion",
+      "kind": "paper",
+      "title": "Reflexion: Language Agents with Verbal Reinforcement Learning",
+      "authors": "N. Shinn, F. Cassano, E. Gopinath, K. Narasimhan, S. Yao",
+      "venue": "NeurIPS 2023",
+      "year": 2023,
+      "url": "https://arxiv.org/abs/2303.11366",
+      "summary": "On failure the agent writes a reflection into episodic memory and reuses it on the next attempt.",
+      "mechanism": "Stores a natural-language reflection per episode; the next attempt is conditioned on it.",
+      "align": {
+        "surface": "memory",
+        "isolation": "no",
+        "retrieval": "similarity",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "peer-reviewed"
+      },
+      "concepts": [
+        "reflection",
+        "experience-replay",
+        "self-improvement"
+      ],
+      "patterns": [
+        "reflexion",
+        "episodic-memory"
+      ]
+    },
+    {
+      "id": "generative-agents",
+      "kind": "paper",
+      "title": "Generative Agents: Interactive Simulacra of Human Behavior",
+      "authors": "J. S. Park et al.",
+      "venue": "UIST 2023",
+      "year": 2023,
+      "url": "https://arxiv.org/abs/2304.03442",
+      "summary": "A memory stream with reflection and planning gives an agent a believable, continuous life.",
+      "mechanism": "Appends observations to a memory stream, retrieves by recency and relevance, and periodically reflects into higher-level notes.",
+      "align": {
+        "surface": "memory",
+        "isolation": "no",
+        "retrieval": "similarity",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "peer-reviewed"
+      },
+      "concepts": [
+        "memory-management",
+        "reflection"
+      ],
+      "patterns": [
+        "episodic-memory",
+        "reflexion"
+      ]
+    },
+    {
+      "id": "voyager",
+      "kind": "paper",
+      "title": "Voyager: An Open-Ended Embodied Agent with Large Language Models",
+      "authors": "G. Wang et al.",
+      "venue": "TMLR",
+      "year": 2023,
+      "url": "https://arxiv.org/abs/2305.16291",
+      "summary": "A Minecraft agent that acquires skills for itself and keeps them in a library.",
+      "mechanism": "Automatic curriculum proposes goals; a skill library stores verified code; environment feedback drives iteration.",
+      "align": {
+        "surface": "skills",
+        "isolation": "partial",
+        "retrieval": "explicit key",
+        "evaluation": "partial",
+        "holdout": "no",
+        "evidence": "peer-reviewed"
+      },
+      "concepts": [
+        "skill-library",
+        "verifier-feedback",
+        "self-improvement"
+      ],
+      "patterns": [
+        "skill-library",
+        "task-decomposition"
+      ]
+    },
+    {
+      "id": "expel",
+      "kind": "paper",
+      "title": "ExpeL: LLM Agents Are Experiential Learners",
+      "authors": "A. Zhao et al.",
+      "venue": "ICLR 2024",
+      "year": 2024,
+      "url": "https://arxiv.org/abs/2308.10144",
+      "summary": "Trains an agent to extract reusable insights from its own past trajectories.",
+      "mechanism": "Successive trajectories are consolidated into natural-language insights that are prepended to later tasks.",
+      "align": {
+        "surface": "memory",
+        "isolation": "no",
+        "retrieval": "similarity",
+        "evaluation": "partial",
+        "holdout": "no",
+        "evidence": "peer-reviewed"
+      },
+      "concepts": [
+        "experience-replay",
+        "transfer",
+        "self-improvement"
+      ],
+      "patterns": [
+        "episodic-memory"
+      ]
+    },
+    {
+      "id": "self-refine",
+      "kind": "paper",
+      "title": "Self-Refine: Iterative Refinement with Self-Feedback",
+      "authors": "A. Madaan et al.",
+      "venue": "NeurIPS 2023",
+      "year": 2023,
+      "url": "https://arxiv.org/abs/2303.17651",
+      "summary": "A generator, a critic and a refiner improve an answer in a loop, with no training.",
+      "mechanism": "The same model critiques its own output; the feedback is consumed within the episode.",
+      "align": {
+        "surface": "nothing",
+        "isolation": "n/a",
+        "retrieval": "none",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "peer-reviewed"
+      },
+      "concepts": [
+        "self-refine-loop",
+        "verifier-feedback"
+      ],
+      "patterns": [
+        "reflexion",
+        "standard-agent-loop"
+      ]
+    },
+    {
+      "id": "tree-of-thoughts",
+      "kind": "paper",
+      "title": "Tree of Thoughts: Deliberate Problem Solving with Large Language Models",
+      "authors": "S. Yao et al.",
+      "venue": "NeurIPS 2023",
+      "year": 2023,
+      "url": "https://arxiv.org/abs/2305.10601",
+      "summary": "Searches a tree of partial solutions with self-evaluation at each step.",
+      "mechanism": "No learning across tasks: the search procedure is fixed and run per episode.",
+      "align": {
+        "surface": "nothing",
+        "isolation": "n/a",
+        "retrieval": "none",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "peer-reviewed"
+      },
+      "concepts": [
+        "self-refine-loop",
+        "verifier-feedback"
+      ],
+      "patterns": [
+        "tree-of-thoughts"
+      ]
+    },
+    {
+      "id": "memgpt",
+      "kind": "paper",
+      "title": "MemGPT: Towards LLMs as Operating Systems",
+      "authors": "C. Packer et al.",
+      "venue": "2023",
+      "year": 2023,
+      "url": "https://arxiv.org/abs/2310.08560",
+      "summary": "Treats the context window as a managed resource with archival and recall memory.",
+      "mechanism": "The agent itself decides when to page memory in and out of a fixed context.",
+      "align": {
+        "surface": "memory",
+        "isolation": "no",
+        "retrieval": "explicit key",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "preprint"
+      },
+      "concepts": [
+        "memory-management"
+      ],
+      "patterns": [
+        "episodic-memory",
+        "working-memory-context"
+      ]
+    },
+    {
+      "id": "agent-workflow-memory",
+      "kind": "paper",
+      "title": "Agent Workflow Memory",
+      "authors": "Z. Wang et al.",
+      "venue": "ICLR 2025",
+      "year": 2024,
+      "url": "https://arxiv.org/abs/2409.07429",
+      "summary": "Learns reusable workflows from past experience and applies them to new tasks.",
+      "mechanism": "Workflows are induced from successful trajectories and retrieved for similar tasks.",
+      "align": {
+        "surface": "workflow",
+        "isolation": "no",
+        "retrieval": "similarity",
+        "evaluation": "partial",
+        "holdout": "no",
+        "evidence": "preprint"
+      },
+      "concepts": [
+        "experience-replay",
+        "transfer",
+        "self-improvement"
+      ],
+      "patterns": [
+        "evaluator-optimizer"
+      ]
+    },
+    {
+      "id": "agent-pro",
+      "kind": "paper",
+      "title": "Learning to Plan via Agentic Proactive Trajectories",
+      "authors": "Z. Wang et al.",
+      "venue": "ICLR 2024",
+      "year": 2024,
+      "url": "https://arxiv.org/abs/2402.17537",
+      "summary": "An agent learns proactive behaviours - asking, verifying, taking steps - from its own trajectories.",
+      "mechanism": "Successful trajectories are mined for proactive patterns that are reused as guidance.",
+      "align": {
+        "surface": "workflow",
+        "isolation": "no",
+        "retrieval": "similarity",
+        "evaluation": "partial",
+        "holdout": "no",
+        "evidence": "preprint"
+      },
+      "concepts": [
+        "experience-replay",
+        "self-improvement"
+      ],
+      "patterns": [
+        "evaluator-optimizer"
+      ]
+    },
+    {
+      "id": "agent-tuning",
+      "kind": "paper",
+      "title": "AgentTuning: Enabling Generalized Agent Abilities for LLM-based Agents",
+      "authors": "A. Jiang et al.",
+      "venue": "ICLR 2024",
+      "year": 2024,
+      "url": "https://arxiv.org/abs/2310.12823",
+      "summary": "Tuning on agent trajectories generalises multi-turn tool use beyond the training tasks.",
+      "mechanism": "Fine-tunes the model on successful trajectories; the weights, not the harness, change.",
+      "align": {
+        "surface": "weights",
+        "isolation": "n/a",
+        "retrieval": "none",
+        "evaluation": "partial",
+        "holdout": "yes",
+        "evidence": "peer-reviewed"
+      },
+      "concepts": [
+        "transfer"
+      ],
+      "patterns": []
+    },
+    {
+      "id": "swe-agent",
+      "kind": "paper",
+      "title": "SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering",
+      "authors": "J. Yang et al.",
+      "venue": "NeurIPS 2024",
+      "year": 2024,
+      "url": "https://arxiv.org/abs/2405.15793",
+      "summary": "Designing the tools and the feedback loop so an LM can actually do software engineering.",
+      "mechanism": "The interface - commands, file viewer, lint feedback - is the contribution; the model is frozen.",
+      "align": {
+        "surface": "workflow",
+        "isolation": "n/a",
+        "retrieval": "none",
+        "evaluation": "partial",
+        "holdout": "yes",
+        "evidence": "peer-reviewed"
+      },
+      "concepts": [
+        "agent-computer",
+        "harness"
+      ],
+      "patterns": [
+        "computer-use"
+      ]
+    },
+    {
+      "id": "toolllm",
+      "kind": "paper",
+      "title": "ToolLLM: Facilitating Large Language Models to Master 16000+ Real-world APIs",
+      "authors": "Y. Qin et al.",
+      "venue": "ICLR 2024",
+      "year": 2023,
+      "url": "https://arxiv.org/abs/2307.16789",
+      "summary": "A tool-use dataset and training recipe for learning to call APIs.",
+      "mechanism": "The model is trained on tool trajectories; the harness is fixed.",
+      "align": {
+        "surface": "weights",
+        "isolation": "n/a",
+        "retrieval": "none",
+        "evaluation": "no",
+        "holdout": "yes",
+        "evidence": "peer-reviewed"
+      },
+      "concepts": [
+        "agent-computer"
+      ],
+      "patterns": [
+        "routing"
+      ]
+    },
+    {
+      "id": "dgm",
+      "kind": "paper",
+      "title": "Darwin Godel Machine: Open-Ended Evolution of Self-Improving Agents",
+      "authors": "S. Sakana AI",
+      "venue": "2025",
+      "year": 2025,
+      "url": "https://arxiv.org/abs/2505.22954",
+      "summary": "A coding agent proposes modifications to its own code and keeps only what measurably improves it.",
+      "mechanism": "Archive of self-modifications, selected empirically against a held-out benchmark; nothing is kept on assertion alone.",
+      "align": {
+        "surface": "code",
+        "isolation": "partial",
+        "retrieval": "explicit key",
+        "evaluation": "yes",
+        "holdout": "yes",
+        "evidence": "preprint"
+      },
+      "concepts": [
+        "self-improvement",
+        "verifier-feedback",
+        "harness"
+      ],
+      "patterns": [
+        "evaluator-optimizer",
+        "reflexion"
+      ]
+    },
+    {
+      "id": "godel-agent",
+      "kind": "paper",
+      "title": "Godel Agent: A Self-Referential Agent Framework for Recursive Self-Improvement",
+      "authors": "J. Sakana AI et al.",
+      "venue": "2025",
+      "year": 2025,
+      "url": "https://arxiv.org/abs/2503.04544",
+      "summary": "An agent that rewrites its own logic, evaluated as it goes.",
+      "mechanism": "Self-modification of the agent's own code, with evaluation gating each accepted change.",
+      "align": {
+        "surface": "code",
+        "isolation": "partial",
+        "retrieval": "explicit key",
+        "evaluation": "partial",
+        "holdout": "partial",
+        "evidence": "preprint"
+      },
+      "concepts": [
+        "self-improvement",
+        "verifier-feedback",
+        "harness"
+      ],
+      "patterns": [
+        "evaluator-optimizer"
+      ]
+    },
+    {
+      "id": "cl-llm-survey",
+      "kind": "paper",
+      "title": "Continual Learning of Large Language Models: A Comprehensive Survey",
+      "authors": "Z. Luo et al.",
+      "venue": "ACM TMLR",
+      "year": 2024,
+      "url": "https://arxiv.org/abs/2403.07108",
+      "summary": "Surveys the methods and the evaluation protocols used for continual learning of language models.",
+      "mechanism": "A survey: it organises the field and compares the protocols, including catastrophic forgetting.",
+      "align": {
+        "surface": "weights",
+        "isolation": "yes",
+        "retrieval": "none",
+        "evaluation": "yes",
+        "holdout": "yes",
+        "evidence": "peer-reviewed"
+      },
+      "concepts": [
+        "continual-learning",
+        "catastrophic-forgetting"
+      ],
+      "patterns": []
+    },
+    {
+      "id": "cl-agent-survey",
+      "kind": "paper",
+      "title": "A Survey on Continual Learning of LLM-based Agents",
+      "authors": "various",
+      "venue": "2024",
+      "year": 2024,
+      "url": "https://arxiv.org/search/?query=continual+learning+LLM+based+agents&searchtype=title",
+      "summary": "Surveys how LLM agents are evaluated under a changing task stream.",
+      "mechanism": "A survey: it catalogues the evaluation protocols used for agent continual learning.",
+      "align": {
+        "surface": "workflow",
+        "isolation": "yes",
+        "retrieval": "cluster + workflow",
+        "evaluation": "yes",
+        "holdout": "yes",
+        "evidence": "preprint"
+      },
+      "concepts": [
+        "continual-learning",
+        "catastrophic-forgetting",
+        "transfer"
+      ],
+      "patterns": []
+    },
+    {
+      "id": "llm-agent-survey",
+      "kind": "paper",
+      "title": "A Survey on Large Language Model based Autonomous Agents",
+      "authors": "L. Wang et al.",
+      "venue": "Frontiers of Computer Science 2024",
+      "year": 2023,
+      "url": "https://arxiv.org/abs/2308.11432",
+      "summary": "A survey of the architectures, the memory and the planning used by LLM agents.",
+      "mechanism": "A survey: it organises the design space agents are built from.",
+      "align": {
+        "surface": "nothing",
+        "isolation": "n/a",
+        "retrieval": "none",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "peer-reviewed"
+      },
+      "concepts": [
+        "harness",
+        "memory-management"
+      ],
+      "patterns": [
+        "episodic-memory"
+      ]
+    },
+    {
+      "id": "dspy",
+      "kind": "framework",
+      "title": "DSPy: Declarative Self-Refining Language Model Programs",
+      "authors": "Stanford NLP (Omar Khattab et al.)",
+      "venue": "open source",
+      "year": 2023,
+      "url": "https://dspy.ai/",
+      "summary": "Optimisers compile a prompt program from data and a metric, then keep the version that scores best.",
+      "mechanism": "The prompt program is the artefact; an optimiser proposes variants and a metric selects the winner.",
+      "align": {
+        "surface": "prompt",
+        "isolation": "no",
+        "retrieval": "similarity",
+        "evaluation": "partial",
+        "holdout": "yes",
+        "evidence": "open source"
+      },
+      "concepts": [
+        "prompt-optimisation",
+        "verifier-feedback",
+        "harness"
+      ],
+      "patterns": [
+        "evaluator-optimizer",
+        "reflexion"
+      ]
+    },
+    {
+      "id": "letta",
+      "kind": "product",
+      "title": "Letta (MemGPT) - the stateful agent server",
+      "authors": "Letta AI",
+      "venue": "product",
+      "year": 2024,
+      "url": "https://letta.com/",
+      "summary": "A server where the agent's memory blocks, tools and system prompt are the durable, editable state.",
+      "mechanism": "Memory blocks are first-class persisted context that an operator or an agent can rewrite.",
+      "align": {
+        "surface": "memory",
+        "isolation": "partial",
+        "retrieval": "explicit key",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "vendor writeup"
+      },
+      "concepts": [
+        "memory-management",
+        "harness"
+      ],
+      "patterns": [
+        "episodic-memory",
+        "working-memory-context"
+      ]
+    },
+    {
+      "id": "claude-code",
+      "kind": "product",
+      "title": "Claude Code",
+      "authors": "Anthropic",
+      "venue": "product",
+      "year": 2025,
+      "url": "https://www.anthropic.com/claude-code",
+      "summary": "A coding agent whose durable knowledge lives in CLAUDE.md files and in skills.",
+      "mechanism": "Project instructions and reusable skills are read into context; they are written by the user, and skills can be authored as the agent works.",
+      "align": {
+        "surface": "skills",
+        "isolation": "partial",
+        "retrieval": "explicit key",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "vendor writeup"
+      },
+      "concepts": [
+        "skill-library",
+        "memory-management",
+        "harness"
+      ],
+      "patterns": [
+        "skill-library",
+        "working-memory-context"
+      ]
+    },
+    {
+      "id": "cursor",
+      "kind": "product",
+      "title": "Cursor",
+      "authors": "Anysphere",
+      "venue": "product",
+      "year": 2023,
+      "url": "https://cursor.com/",
+      "summary": "An editor agent with project rules and a memory that carries decisions between sessions.",
+      "mechanism": "Rules and memories are durable artefacts read into every request.",
+      "align": {
+        "surface": "memory",
+        "isolation": "partial",
+        "retrieval": "explicit key",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "vendor writeup"
+      },
+      "concepts": [
+        "memory-management",
+        "harness"
+      ],
+      "patterns": [
+        "episodic-memory",
+        "working-memory-context"
+      ]
+    },
+    {
+      "id": "langgraph",
+      "kind": "framework",
+      "title": "LangGraph",
+      "authors": "LangChain",
+      "venue": "open source",
+      "year": 2024,
+      "url": "https://langchain-ai.github.io/langgraph/",
+      "summary": "Graph-structured agents with a checkpointer, so a run's state is durable and resumable.",
+      "mechanism": "The graph is the harness; the checkpointer stores state, and a store holds cross-thread memory.",
+      "align": {
+        "surface": "workflow",
+        "isolation": "partial",
+        "retrieval": "explicit key",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "open source"
+      },
+      "concepts": [
+        "harness",
+        "memory-management"
+      ],
+      "patterns": [
+        "dynamic-dag",
+        "episodic-memory"
+      ]
+    },
+    {
+      "id": "openhands",
+      "kind": "product",
+      "title": "OpenHands",
+      "authors": "All Hands AI",
+      "venue": "open source",
+      "year": 2024,
+      "url": "https://www.all-hands.dev/",
+      "summary": "An open platform for software-development agents, with a runtime, a sandbox and microagents.",
+      "mechanism": "The agent's tools, runtime and microagent configuration are the product surface.",
+      "align": {
+        "surface": "workflow",
+        "isolation": "partial",
+        "retrieval": "explicit key",
+        "evaluation": "partial",
+        "holdout": "yes",
+        "evidence": "open source"
+      },
+      "concepts": [
+        "harness",
+        "agent-computer"
+      ],
+      "patterns": [
+        "computer-use",
+        "sandbox-execution"
+      ]
+    },
+    {
+      "id": "crewai",
+      "kind": "framework",
+      "title": "CrewAI",
+      "authors": "CrewAI Inc.",
+      "venue": "open source",
+      "year": 2024,
+      "url": "https://www.crewai.com/",
+      "summary": "Role-based agents composed into flows, with memory and training over past runs.",
+      "mechanism": "Flows define the workflow; memory stores prior runs and can be trained into the agents.",
+      "align": {
+        "surface": "workflow",
+        "isolation": "partial",
+        "retrieval": "explicit key",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "open source"
+      },
+      "concepts": [
+        "harness",
+        "memory-management"
+      ],
+      "patterns": [
+        "hierarchical-teams",
+        "dynamic-dag"
+      ]
+    },
+    {
+      "id": "openai-agents-sdk",
+      "kind": "framework",
+      "title": "OpenAI Agents SDK",
+      "authors": "OpenAI",
+      "venue": "open source",
+      "year": 2025,
+      "url": "https://openai.github.io/openai-agents-python/",
+      "summary": "Agents, handoffs, guardrails and sessions as first-class parts of the harness.",
+      "mechanism": "The session is durable state; guardrails are deterministic checks in the loop rather than prompt text.",
+      "align": {
+        "surface": "workflow",
+        "isolation": "partial",
+        "retrieval": "explicit key",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "open source"
+      },
+      "concepts": [
+        "harness",
+        "verifier-feedback"
+      ],
+      "patterns": [
+        "policy-engine",
+        "hierarchical-teams"
+      ]
+    },
+    {
+      "id": "autogen",
+      "kind": "framework",
+      "title": "AutoGen",
+      "authors": "Microsoft Research",
+      "venue": "open source",
+      "year": 2023,
+      "url": "https://microsoft.github.io/autogen/",
+      "summary": "Conversable agents that hand work to each other, with a memory layer over the conversation.",
+      "mechanism": "The conversation protocol is the harness; memory and termination are separate components.",
+      "align": {
+        "surface": "workflow",
+        "isolation": "partial",
+        "retrieval": "explicit key",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "open source"
+      },
+      "concepts": [
+        "harness"
+      ],
+      "patterns": [
+        "hierarchical-teams"
+      ]
+    },
+    {
+      "id": "building-effective-agents",
+      "kind": "writeup",
+      "title": "Building effective agents",
+      "authors": "Anthropic",
+      "venue": "engineering blog",
+      "year": 2024,
+      "url": "https://www.anthropic.com/engineering/building-effective-agents",
+      "summary": "Where to draw the line between a workflow and an agent, and what each is good for.",
+      "mechanism": "Guidance, not a mechanism: it argues that simple composable patterns beat opaque autonomy.",
+      "align": {
+        "surface": "nothing",
+        "isolation": "n/a",
+        "retrieval": "none",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "vendor writeup"
+      },
+      "concepts": [
+        "harness"
+      ],
+      "patterns": [
+        "computer-use"
+      ]
+    },
+    {
+      "id": "context-engineering",
+      "kind": "writeup",
+      "title": "Effective context engineering for AI agents",
+      "authors": "Anthropic",
+      "venue": "engineering blog",
+      "year": 2025,
+      "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+      "summary": "Context is a finite budget: the write-up is about choosing what goes in it.",
+      "mechanism": "Guidance: curating the context, compaction and just-in-time retrieval rather than training.",
+      "align": {
+        "surface": "prompt",
+        "isolation": "partial",
+        "retrieval": "similarity",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "vendor writeup"
+      },
+      "concepts": [
+        "memory-management",
+        "harness"
+      ],
+      "patterns": [
+        "working-memory-context",
+        "episodic-memory"
+      ]
+    },
+    {
+      "id": "dont-build-multi-agents",
+      "kind": "blog",
+      "title": "Don't Build Multi-Agents",
+      "authors": "Cognition",
+      "venue": "blog",
+      "year": 2024,
+      "url": "https://cognition.ai/blog/dont-build-multi-agents",
+      "summary": "A warning that parallel sub-agents fragment context and lose the main thread.",
+      "mechanism": "Argument, not a mechanism: it argues for a single context and a tool-first design.",
+      "align": {
+        "surface": "nothing",
+        "isolation": "n/a",
+        "retrieval": "none",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "blog"
+      },
+      "concepts": [
+        "harness"
+      ],
+      "patterns": [
+        "hierarchical-teams"
+      ]
+    },
+    {
+      "id": "bitter-lesson",
+      "kind": "writeup",
+      "title": "The Bitter Lesson",
+      "authors": "R. Sutton",
+      "venue": "essay",
+      "year": 2019,
+      "url": "http://www.incompleteideas.net/IncIdeas/BitterLesson.html",
+      "summary": "Methods that scale with compute beat methods that rely on human knowledge.",
+      "mechanism": "Argument, not a mechanism: the recurring lesson that hand-built structure loses to learning.",
+      "align": {
+        "surface": "nothing",
+        "isolation": "n/a",
+        "retrieval": "none",
+        "evaluation": "no",
+        "holdout": "no",
+        "evidence": "blog"
+      },
+      "concepts": [
+        "self-improvement",
+        "transfer"
+      ],
+      "patterns": []
+    }
+  ]
+}

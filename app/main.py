@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 from . import benchmarks as benchmarks_mod
 from . import db, designs as designs_mod, design_docs as design_docs_mod
 from . import envs, flows as flows_mod
+from . import landscape as landscape_mod
 from . import metrics as metrics_mod
 from . import scaffold as scaffold_mod
 from . import stats as stats_mod
@@ -524,6 +525,92 @@ async def clear_runs(only_status: str = "") -> Dict[str, Any]:
         db.delete_run(r["id"])
         removed.append(r["id"])
     return {"deleted": len(removed), "run_ids": removed}
+
+
+@app.get("/api/landscape")
+async def landscape(q: str = "", kind: str = "", surface: str = "",
+                   evidence: str = "") -> Dict[str, Any]:
+    """
+    The landscape knowledge base: works, their alignment, and the summary.
+
+    The alignment columns are this lab's assessment, not the works' claims;
+    the payload marks which is which so a reader cannot confuse them.
+    """
+    return {
+        "works": landscape_mod.search(q, kind, surface, evidence),
+        "summary": landscape_mod.summary(),
+        "dimensions": landscape_mod.dimensions(),
+        "concepts": landscape_mod.concepts(),
+        "version": landscape_mod.load_landscape().get("version", ""),
+    }
+
+
+@app.get("/api/landscape/matrix")
+async def landscape_matrix() -> Dict[str, Any]:
+    """The alignment matrix: one row per work, one column per axis."""
+    return landscape_mod.alignment_matrix()
+
+
+@app.get("/api/landscape/graph")
+async def landscape_graph() -> Dict[str, Any]:
+    """The two knowledge graphs, as data and as Mermaid source."""
+    return {
+        "landscape": landscape_mod.landscape_graph(),
+        "mechanism": landscape_mod.mechanism_graph(),
+    }
+
+
+class LandscapeEntryIn(BaseModel):
+    id: Optional[str] = None
+    kind: str = "note"
+    title: str
+    authors: str = ""
+    venue: str = ""
+    year: Optional[int] = None
+    url: str = ""
+    summary: str = ""
+    mechanism: str = ""
+    align: Dict[str, Any] = Field(default_factory=dict)
+    concepts: List[str] = Field(default_factory=list)
+    patterns: List[str] = Field(default_factory=list)
+    source: str = "local"
+
+
+@app.post("/api/landscape/works")
+async def add_landscape_work(body: LandscapeEntryIn) -> Dict[str, Any]:
+    """
+    Add a work to the local knowledge base.
+
+    The shipped landscape is the seed; this is how the lab's users grow it.
+    The alignment is optional - a work with no alignment is still a work, it
+    just has not been placed on the axes yet.
+    """
+    if not body.title.strip():
+        raise HTTPException(400, "a title is required")
+    entry_id = body.id or ("w_" + uuid.uuid4().hex[:10])
+    valid = {d["id"]: d for d in landscape_mod.dimensions()}
+    align = {}
+    for key, value in (body.align or {}).items():
+        if key in valid and value in (valid[key].get("options") or []):
+            align[key] = value
+    known_concepts = {c["id"] for c in landscape_mod.concepts()}
+    entry = {
+        "id": entry_id, "kind": body.kind, "title": body.title,
+        "authors": body.authors, "venue": body.venue, "year": body.year,
+        "url": body.url, "summary": body.summary, "mechanism": body.mechanism,
+        "align": align,
+        "concepts": [c for c in body.concepts if c in known_concepts],
+        "patterns": list(body.patterns), "source": body.source,
+    }
+    db.add_landscape_entry(entry)
+    return {"added": entry, "total": len(landscape_mod.works())}
+
+
+@app.delete("/api/landscape/works/{entry_id}")
+async def delete_landscape_work(entry_id: str) -> Dict[str, Any]:
+    if not db.delete_landscape_entry(entry_id):
+        raise HTTPException(404, f"no local entry '{entry_id}'")
+    return {"deleted": entry_id}
 
 
 @app.get("/api/design/docs")

@@ -251,6 +251,54 @@ def test_design_document_by_id_and_404():
     assert client.get("/api/design/docs/does-not-exist").status_code == 404
 
 
+def test_landscape_endpoint_returns_the_knowledge_base():
+    r = client.get("/api/landscape").json()
+    assert r["works"], "no works"
+    assert r["dimensions"], "no alignment dimensions"
+    assert r["concepts"], "no concepts"
+    s = r["summary"]
+    assert s["works"] == len(r["works"])
+    assert s["dimensions"] == len(r["dimensions"])
+    w = r["works"][0]
+    assert w["align"] and w["assessment"]["verdict"]
+
+
+def test_landscape_search_and_filters():
+    r = client.get("/api/landscape?kind=paper").json()
+    assert r["works"]
+    assert all(w["kind"] == "paper" for w in r["works"])
+    q = client.get("/api/landscape?q=memory").json()
+    assert q["works"], "search found nothing"
+
+
+def test_landscape_graph_returns_mermaid():
+    g = client.get("/api/landscape/graph").json()
+    assert g["landscape"]["mermaid"].startswith("flowchart")
+    assert g["mechanism"]["mermaid"].startswith("flowchart")
+    assert g["landscape"]["nodes"] > 10
+
+
+def test_landscape_accepts_a_new_work():
+    body = {"kind": "note", "title": "A test work", "summary": "s",
+            "mechanism": "m", "url": "https://example.invalid/x",
+            "align": {"surface": "memory", "evaluation": "no", "holdout": "no"}}
+    r = client.post("/api/landscape/works", json=body).json()
+    added = r["added"]
+    assert added["id"] and added["align"]["surface"] == "memory"
+    # it must now be in the knowledge base
+    listed = client.get("/api/landscape").json()
+    assert any(w["id"] == added["id"] for w in listed["works"])
+    assert any(w["id"] == added["id"] and w["added_locally"] for w in listed["works"])
+    # and removable again
+    assert client.delete(f"/api/landscape/works/{added['id']}").status_code == 200
+    listed2 = client.get("/api/landscape").json()
+    assert not any(w["id"] == added["id"] for w in listed2["works"])
+
+
+def test_landscape_rejects_a_work_with_no_title():
+    assert client.post("/api/landscape/works", json={"title": "  "}).status_code == 400
+
+
 def test_benchmarks_endpoint_exposes_bands_and_glossary():
     b = client.get("/api/benchmarks").json()
     assert b["scenarios"], "no benchmark scenarios"

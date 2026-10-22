@@ -21,6 +21,7 @@
     <button data-tab="suite" role="tab" aria-selected="false">Suite</button>
     <button data-tab="patterns" role="tab" aria-selected="false">Patterns</button>
     <button data-tab="design" role="tab" aria-selected="false">Design</button>
+    <button data-tab="landscape" role="tab" aria-selected="false">Landscape</button>
   </nav>
   <div id="llm-health" class="health" title="model backend" role="status">llm: …</div>
 </header>
@@ -337,6 +338,83 @@
         <article id="design-doc" class="doc"></article>
       </div>
     </div>
+  </section>
+
+  <!-- =========================================================== LANDSCAPE -->
+  <section id="tab-landscape" class="tab" role="tabpanel">
+    <h2>Landscape of self-learning agents</h2>
+    <p class="hint">The academic and industry field, placed on the axes this lab
+      measures. The <b>source facts</b> (title, venue, what it does) are what the
+      work states about itself; the <b>alignment</b> columns are this lab's
+      assessment, and are marked as such.</p>
+    <div id="landscape-stats" class="metric-grid"></div>
+
+    <div class="row-btns">
+      <input id="l-search" class="filter wide" placeholder="search title, author, mechanism…" aria-label="Search the landscape">
+      <select id="l-kind" class="filter" aria-label="Filter by kind"></select>
+      <select id="l-surface" class="filter" aria-label="Filter by what it rewrites"></select>
+      <select id="l-evidence" class="filter" aria-label="Filter by evidence"></select>
+      <button id="l-reset" class="small ghost">Reset</button>
+    </div>
+
+    <h3>Alignment matrix</h3>
+    <p class="hint">One row per work, one column per axis. A work whose protocol
+      measures nothing under drift cannot have its own claims falsified &mdash;
+      that is the last column.</p>
+    <div id="l-matrix" class="table-wrap"></div>
+
+    <h3>Works</h3>
+    <div id="l-works" class="cards"></div>
+
+    <h3>Knowledge graphs</h3>
+    <div class="row">
+      <div class="col">
+        <div id="l-graph-landscape" class="chart"></div>
+      </div>
+      <div class="col">
+        <div id="l-graph-mechanism" class="chart"></div>
+      </div>
+    </div>
+
+    <h3>Add a work</h3>
+    <p class="hint">Found something the shipped landscape is missing? Add it and
+      it joins the knowledge base, the matrix and the graphs.</p>
+    <form id="l-add" class="grid2">
+      <label for="l-title">Title<input id="l-title" required placeholder="Paper, product or writeup"></label>
+      <label for="l-kind-add">Kind
+        <select id="l-kind-add">
+          <option value="paper">paper</option>
+          <option value="product">product</option>
+          <option value="framework">framework</option>
+          <option value="writeup">writeup</option>
+          <option value="blog">blog</option>
+          <option value="note">note</option>
+        </select>
+      </label>
+      <label for="l-authors">Authors / org<input id="l-authors"></label>
+      <label for="l-venue">Venue<input id="l-venue"></label>
+      <label for="l-year">Year<input id="l-year" type="number" min="1900" max="2100"></label>
+      <label for="l-url">URL<input id="l-url" placeholder="https://…"></label>
+      <label for="l-summary">What it does (source fact)
+        <input id="l-summary" placeholder="one line"></label>
+      <label for="l-mechanism">Mechanism (source fact)
+        <input id="l-mechanism" placeholder="what changes, and how"></label>
+      <label for="l-surface-add">What it rewrites (lab assessment)
+        <select id="l-surface-add"></select>
+      </label>
+      <label for="l-eval-add">Degradation measured (lab assessment)
+        <select id="l-eval-add"></select>
+      </label>
+      <label for="l-holdout-add">Disjoint hold-out (lab assessment)
+        <select id="l-holdout-add"></select>
+      </label>
+      <label for="l-concepts-add">Concepts (comma separated)
+        <input id="l-concepts-add" placeholder="reflection, experience-replay"></label>
+      <div class="row-btns">
+        <button type="submit" class="primary">Add to the knowledge base</button>
+        <span id="l-add-msg" class="msg" role="status" aria-live="polite"></span>
+      </div>
+    </form>
   </section>
 </main>
 <script src="/static/vendor/mermaid.min.js"></script>

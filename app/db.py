@@ -82,6 +82,24 @@ CREATE TABLE IF NOT EXISTS streams (
     config      TEXT NOT NULL,
     created_at  REAL NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS landscape_entries (
+    id          TEXT PRIMARY KEY,
+    kind        TEXT DEFAULT 'note',     -- paper|product|framework|writeup|blog|note
+    title       TEXT NOT NULL,
+    authors     TEXT DEFAULT '',
+    venue       TEXT DEFAULT '',
+    year        INTEGER,
+    url         TEXT DEFAULT '',
+    summary     TEXT DEFAULT '',
+    mechanism   TEXT DEFAULT '',
+    align       TEXT DEFAULT '{}',        -- JSON: this lab's alignment
+    concepts    TEXT DEFAULT '[]',        -- JSON array of concept ids
+    patterns    TEXT DEFAULT '[]',        -- JSON array of pattern ids
+    source      TEXT DEFAULT 'local',     -- where it came from
+    created_at  REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_landscape_created ON landscape_entries(created_at DESC);
 """
 
 
@@ -288,3 +306,69 @@ def get_stream(stream_id: str) -> Optional[Dict[str, Any]]:
     d = dict(row)
     d["config"] = json.loads(d["config"])
     return d
+
+
+# ------------------------------------------------------------- landscape
+
+def add_landscape_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
+    """Add a work to the local knowledge base."""
+    conn = get_conn()
+    now = time.time()
+    conn.execute(
+        """INSERT INTO landscape_entries
+             (id, kind, title, authors, venue, year, url, summary, mechanism,
+              align, concepts, patterns, source, created_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+           ON CONFLICT(id) DO UPDATE SET
+             kind=excluded.kind, title=excluded.title, authors=excluded.authors,
+             venue=excluded.venue, year=excluded.year, url=excluded.url,
+             summary=excluded.summary, mechanism=excluded.mechanism,
+             align=excluded.align, concepts=excluded.concepts,
+             patterns=excluded.patterns, source=excluded.source""",
+        (entry.get("id", ""), entry.get("kind", "note"), entry.get("title", ""),
+         entry.get("authors", ""), entry.get("venue", ""), entry.get("year"),
+         entry.get("url", ""), entry.get("summary", ""),
+         entry.get("mechanism", ""),
+         json.dumps(entry.get("align") or {}),
+         json.dumps(entry.get("concepts") or []),
+         json.dumps(entry.get("patterns") or []),
+         entry.get("source", "local"), now),
+    )
+    conn.commit()
+    return list_landscape_entries_by_id(entry.get("id", "")) or entry
+
+
+def list_landscape_entries() -> List[Dict[str, Any]]:
+    rows = get_conn().execute(
+        "SELECT * FROM landscape_entries ORDER BY created_at DESC").fetchall()
+    out = []
+    for r in rows:
+        d = dict(r)
+        for key in ("align", "concepts", "patterns"):
+            try:
+                d[key] = json.loads(d.get(key) or ("{}" if key == "align" else "[]"))
+            except Exception:
+                d[key] = {} if key == "align" else []
+        out.append(d)
+    return out
+
+
+def list_landscape_entries_by_id(entry_id: str) -> Optional[Dict[str, Any]]:
+    row = get_conn().execute("SELECT * FROM landscape_entries WHERE id=?",
+                              (entry_id,)).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    for key in ("align", "concepts", "patterns"):
+        try:
+            d[key] = json.loads(d.get(key) or ("{}" if key == "align" else "[]"))
+        except Exception:
+            d[key] = {} if key == "align" else []
+    return d
+
+
+def delete_landscape_entry(entry_id: str) -> bool:
+    conn = get_conn()
+    cur = conn.execute("DELETE FROM landscape_entries WHERE id=?", (entry_id,))
+    conn.commit()
+    return cur.rowcount > 0

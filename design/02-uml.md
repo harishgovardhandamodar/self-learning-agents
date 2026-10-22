@@ -23,7 +23,7 @@ flowchart TB
   end
 
   subgraph API["API layer (app/main.py)"]
-    ROUTES["35 endpoints"]
+    ROUTES["40 endpoints"]
     JOBS["Job registry<br/>asyncio tasks + cancel flags"]
     ASSE["Assemblers<br/>_cell_summary · _run_row"]
   end

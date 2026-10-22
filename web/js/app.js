@@ -61,6 +61,7 @@ $$("nav button").forEach((b) => {
     if (b.dataset.tab === "coverage") loadCoverage();
     if (b.dataset.tab === "suite") { renderSuiteEvolvers(); loadSuiteReport(); loadSuiteAdvice(); }
     if (b.dataset.tab === "design") loadDesignDocs();
+    if (b.dataset.tab === "landscape") loadLandscape();
     if (b.dataset.tab === "patterns") loadPatterns();
   };
 });
@@ -1049,6 +1050,213 @@ $("design-outline").onchange = (e) => {
   const el = document.getElementById(e.target.value);
   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 };
+
+/* ------------------------------------------------------------ landscape */
+let landscapeData = null;
+
+async function loadLandscape() {
+  const params = new URLSearchParams();
+  const q = $("l-search").value.trim();
+  const kind = $("l-kind").value;
+  const surface = $("l-surface").value;
+  const evidence = $("l-evidence").value;
+  if (q) params.set("q", q);
+  if (kind) params.set("kind", kind);
+  if (surface) params.set("surface", surface);
+  if (evidence) params.set("evidence", evidence);
+  try {
+    landscapeData = await get(`/api/landscape?${params.toString()}`);
+  } catch (e) {
+    $("l-works").innerHTML = `<div class="empty">Could not load the landscape: ${esc(e.message || e)}</div>`;
+    return;
+  }
+  renderLandscapeStats(landscapeData.summary);
+  landscapeFilters();
+  renderLandscapeMatrix(landscapeData);
+  renderLandscapeWorks(landscapeData.works);
+  await renderLandscapeGraphs();
+}
+
+function renderLandscapeStats(s) {
+  const kinds = Object.entries(s.by_kind || {})
+    .map(([k, v]) => `${v} ${k}`).join(" · ");
+  $("landscape-stats").innerHTML = `
+    <div class="metric"><div class="k">works</div><div class="v">${s.works}</div>
+      <div class="s">${esc(kinds)}</div></div>
+    <div class="metric"><div class="k">concepts</div><div class="v">${s.concepts}</div>
+      <div class="s">the vocabulary the field shares</div></div>
+    <div class="metric ${s.falsifiable === 0 ? "bad" : (s.falsifiable < s.works / 4 ? "warn" : "good")}">
+      <div class="k">falsifiable by their own protocol</div>
+      <div class="v">${s.falsifiable}<span style="font-size:14px;color:var(--dim)"> / ${s.works}</span></div>
+      <div class="s">measure degradation AND use a disjoint hold-out</div></div>
+    <div class="metric"><div class="k">axes</div><div class="v">${s.dimensions}</div>
+      <div class="s">the lab's measurement dimensions</div></div>
+    <div class="metric"><div class="k">snapshot</div><div class="v" style="font-size:16px">${esc(s.version || "-")}</div>
+      <div class="s">${Object.entries(s.by_evidence || {}).map(([k, v]) => `${v} ${k}`).join(" · ")}</div></div>`;
+}
+
+function renderLandscapeMatrix(data) {
+  const dims = data.dimensions || [];
+  const rows = data.works || [];
+  if (!rows.length) {
+    $("l-matrix").innerHTML = `<p class="hint">No works match the filter.</p>`;
+    return;
+  }
+  let h = `<table class="cmp"><thead><tr><th>work</th><th>year</th>` +
+    dims.map((d) => `<th title="${esc(d.question)}">${esc(d.label)}</th>`).join("") +
+    `<th>could its protocol falsify its own claim?</th></tr></thead><tbody>`;
+  rows.forEach((w) => {
+    h += `<tr><td><b>${esc(w.title)}</b>
+        <div class="meta">${esc(w.venue || "")} · ${esc(w.authors || "")}</div>
+        ${w.added_locally ? '<span class="pill">added locally</span>' : ""}</td>
+        <td>${w.year || "-"}</td>` +
+      dims.map((d) => `<td>${alignCell(w.align[d.id], d)}</td>`).join("") +
+      `<td class="mode"><span class="pill ${w.assessment.falsifiable ? "ok" : ""}">${esc(w.assessment.verdict)}</span>
+        <div class="meta">${esc(w.assessment.why)}</div></td></tr>`;
+  });
+  $("l-matrix").innerHTML = h + "</tbody></table>";
+}
+
+function alignCell(value, dim) {
+  if (!value || value === "unknown") return `<span class="meta">–</span>`;
+  const good = (value === "yes" || value === "peer-reviewed" || value === "preprint"
+    || value === "open source");
+  const bad = (value === "no" || value === "nothing" || value === "none");
+  const cls = good ? "ok" : (bad ? "" : "");
+  return `<span class="pill ${cls}">${esc(value)}</span>`;
+}
+
+function renderLandscapeWorks(works) {
+  if (!works.length) {
+    $("l-works").innerHTML = `<div class="empty">No works match the filter.</div>`;
+    return;
+  }
+  $("l-works").innerHTML = works.map((w) => `<div class="card">
+      <h4>${esc(w.title)}
+        <span class="pill">${esc(w.kind)}</span>
+        ${w.added_locally ? '<span class="pill ok">added locally</span>' : ""}</h4>
+      <div class="meta">${esc(w.authors || "")} · ${esc(w.venue || "")} · ${w.year || ""}
+        ${w.url ? ` · <a href="${esc(w.url)}" target="_blank" rel="noopener">source</a>` : ""}</div>
+      <p><b>What it does:</b> ${esc(w.summary || "-")}</p>
+      <p><b>Mechanism:</b> ${esc(w.mechanism || "-")}</p>
+      <div class="meta">alignment: ${Object.entries(w.align).map(([k, v]) => `${k}=${v}`).join(" · ")}</div>
+      <div class="meta">assessment: ${esc(w.assessment.verdict)} — ${esc(w.assessment.why)}</div>
+      ${w.patterns && w.patterns.length ? `<div class="meta">patterns: ${w.patterns.map(esc).join(", ")}</div>` : ""}
+      ${w.concepts && w.concepts.length ? `<div class="meta">concepts: ${w.concepts.map(esc).join(", ")}</div>` : ""}
+    </div>`).join("");
+}
+
+async function renderLandscapeGraphs() {
+  try {
+    const g = await get("/api/landscape/graph");
+    const a = $("l-graph-landscape");
+    a.innerHTML = `<h4>${esc(g.landscape.title)}</h4>
+      <div class="meta">${g.landscape.nodes} nodes · ${g.landscape.edges} edges</div>`;
+    const body = document.createElement("div");
+    a.appendChild(body);
+    await renderMermaid(body, g.landscape.mermaid, "ls_landscape");
+
+    const b = $("l-graph-mechanism");
+    b.innerHTML = `<h4>${esc(g.mechanism.title)}</h4>
+      <div class="meta">surfaces: ${g.mechanism.surfaces.map(esc).join(", ")}</div>`;
+    const body2 = document.createElement("div");
+    b.appendChild(body2);
+    await renderMermaid(body2, g.mechanism.mermaid, "ls_mechanism");
+  } catch (e) {
+    $("l-graph-landscape").innerHTML = `<div class="empty">${esc(e.message || e)}</div>`;
+  }
+}
+
+function landscapeFilters() {
+  const s = landscapeData?.summary;
+  if (!s) return;
+  const dims = landscapeData?.dimensions || [];
+  const surfaceDim = dims.find((d) => d.id === "surface");
+  const evalDim = dims.find((d) => d.id === "evaluation");
+  const holdDim = dims.find((d) => d.id === "holdout");
+  const opts = (dim, sel) => {
+    if (!dim) return;
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">all</option>` +
+      (dim.options || []).map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join("");
+    if (cur) sel.value = cur;
+  };
+  const kindSel = $("l-kind");
+  const curKind = kindSel.value;
+  kindSel.innerHTML = `<option value="">all kinds</option>` +
+    Object.entries(s.by_kind || {}).map(([k, v]) => `<option value="${esc(k)}">${esc(k)} (${v})</option>`).join("");
+  if (curKind) kindSel.value = curKind;
+  opts(surfaceDim, $("l-surface"));
+  const evSel = $("l-evidence");
+  const curEv = evSel.value;
+  evSel.innerHTML = `<option value="">all evidence</option>` +
+    Object.entries(s.by_evidence || {}).map(([k, v]) => `<option value="${esc(k)}">${esc(k)} (${v})</option>`).join("");
+  if (curEv) evSel.value = curEv;
+  // The add-form selects.
+  const surfAdd = $("l-surface-add");
+  if (surfaceDim && !surfAdd.options.length) {
+    surfAdd.innerHTML = `<option value="">unknown</option>` +
+      (surfaceDim.options || []).map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join("");
+  }
+  const evalAdd = $("l-eval-add");
+  if (evalDim && !evalAdd.options.length) {
+    evalAdd.innerHTML = `<option value="">unknown</option>` +
+      (evalDim.options || []).map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join("");
+  }
+  const holdAdd = $("l-holdout-add");
+  if (holdDim && !holdAdd.options.length) {
+    holdAdd.innerHTML = `<option value="">unknown</option>` +
+      (holdDim.options || []).map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join("");
+  }
+}
+
+$("l-search").addEventListener("input", debounce(loadLandscape, 250));
+$("l-kind").addEventListener("change", loadLandscape);
+$("l-surface").addEventListener("change", loadLandscape);
+$("l-evidence").addEventListener("change", loadLandscape);
+$("l-reset").onclick = () => {
+  $("l-search").value = "";
+  ["l-kind", "l-surface", "l-evidence"].forEach((id) => { $(id).value = ""; });
+  loadLandscape();
+};
+
+$("l-add").onsubmit = async (e) => {
+  e.preventDefault();
+  const align = {};
+  if ($("l-surface-add").value) align.surface = $("l-surface-add").value;
+  if ($("l-eval-add").value) align.evaluation = $("l-eval-add").value;
+  if ($("l-holdout-add").value) align.holdout = $("l-holdout-add").value;
+  const body = {
+    kind: $("l-kind-add").value,
+    title: $("l-title").value.trim(),
+    authors: $("l-authors").value.trim(),
+    venue: $("l-venue").value.trim(),
+    year: $("l-eval-add").value ? null : ($("l-year").value ? +$("l-year").value : null),
+    url: $("l-url").value.trim(),
+    summary: $("l-summary").value.trim(),
+    mechanism: $("l-mechanism").value.trim(),
+    align,
+    concepts: $("l-concepts-add").value.split(",").map((s) => s.trim()).filter(Boolean),
+  };
+  try {
+    const res = await post("/api/landscape/works", body);
+    say($("l-add-msg"), `Added "${res.added.title}" — the knowledge base now holds ${res.total} works.`, "ok");
+    $("l-title").value = "";
+    $("l-summary").value = "";
+    $("l-mechanism").value = "";
+    await loadLandscape();
+  } catch (err) {
+    say($("l-add-msg"), `Could not add: ${err.message || err}`, "err");
+  }
+};
+
+function debounce(fn, ms) {
+  let t = null;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
 
 /* ------------------------------------------------------------- patterns */
 $("p-domain").onchange = loadPatterns;

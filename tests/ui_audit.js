@@ -84,7 +84,7 @@ const note = (kind, msg, extra = {}) => problems.push({ kind, msg, ...extra });
     await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-${name}.png`), fullPage: true });
   }
 
-  for (const t of ['designs', 'runs', 'compare', 'reference', 'coverage', 'suite', 'patterns', 'design']) await tab(t);
+  for (const t of ['designs', 'runs', 'compare', 'reference', 'coverage', 'suite', 'patterns', 'design', 'landscape']) await tab(t);
 
   // ---------------------------------------------- batch launch (core workflow)
   await page.click('nav button[data-tab="runs"]');
@@ -201,6 +201,19 @@ const note = (kind, msg, extra = {}) => problems.push({ kind, msg, ...extra });
   const designHeadings = await page.$$eval('#design-doc .md-h', (els) => els.length);
   if (designHeadings < 3) note('ux', 'design document has no headings');
   await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-design.png`), fullPage: true });
+
+  // --------------------------------------------------------- landscape tab
+  await page.click('nav button[data-tab="landscape"]');
+  await page.waitForTimeout(3500);
+  const landStats = await page.$$eval('#landscape-stats .metric', (els) => els.length);
+  if (!landStats) note('ux', 'landscape tab has no summary');
+  const landRows = await page.$$eval('#l-matrix tbody tr', (els) => els.length);
+  if (landRows < 10) note('ux', `landscape matrix lists only ${landRows} works`);
+  const landCols = await page.$$eval('#l-matrix thead th', (els) => els.length);
+  if (landCols < 6) note('ux', `landscape matrix has ${landCols} columns`);
+  const landGraphs = await page.$$eval('#l-graph-landscape svg, #l-graph-mechanism svg', (els) => els.length);
+  if (landGraphs < 2) note('ux', `landscape knowledge graphs rendered ${landGraphs}/2`);
+  await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-landscape.png`), fullPage: true });
 
   // --------------------------------------------------------- reference tab
   await page.click('nav button[data-tab="reference"]');

@@ -137,6 +137,7 @@ python3 -m tests.sweep --iterations 50 --block 20 --eval 30 \
 | `app/runner.py` | Stream protocol: train → checkpoint → evaluate on held-out sets |
 | `app/designs.py` | Design specs, pattern picker (AI-Agents-Patterns catalog), guardrails, domain playbooks |
 | `app/design_docs.py` | Parses `design/*.md` into blocks for the Design tab |
+| `app/landscape.py` | The landscape knowledge base: alignment, assessment, graphs |
 | `app/benchmarks.py` | Measured reference bands (mean ± std per cell) + the metric glossary |
 | `app/flows.py` | Mermaid generators: the agent flow drawn from a design, the stream it faces |
 | `app/stats.py` | Welch t-test, effect size, Holm correction, power, cell ranking |
@@ -235,6 +236,11 @@ inside its measured band.
 | `GET/POST/PUT/DELETE /api/designs` | Design CRUD |
 | `POST /api/designs/from-playbook/{id}` | Create a design from a domain playbook |
 | `GET /api/patterns`, `/api/scenarios/catalog` | The AI-Agents-Patterns catalog + the category flow diagrams |
+| `GET /api/design/docs` | The design & architecture documents, parsed into blocks |
+| `GET /api/landscape` | The landscape knowledge base: works, alignment, assessment |
+| `GET /api/landscape/matrix` | The alignment matrix, one row per work |
+| `GET /api/landscape/graph` | The two knowledge graphs, as data and as Mermaid |
+| `POST /api/landscape/works` | Add a work to the local knowledge base |
 | `GET /api/designs/{id}/flow` | The design's mermaid diagrams (agent flow + stream) |
 | `GET /api/patterns/{id}` | One pattern, with its flow diagram when it has one |
 | `GET /api/playbooks`, `/api/guardrails`, `/api/streams`, `/api/evolvers` | Guidance and catalogues |
@@ -361,6 +367,37 @@ asserts that every module named exists, that the endpoint count, family
 count and scenario count stated are the real ones, that the tables named
 are in the schema, that the evolvers named are the ones registered, and
 that every diagram parses with mermaid's own parser.
+
+## Landscape of self-learning agents
+
+The **Landscape** tab collects the academic and industry field — papers,
+products, frameworks, writeups, blogs — and **aligns** it with the axes this
+lab measures.
+
+| axis | question |
+|---|---|
+| What it rewrites | prompt · memory · skills · workflow · code · weights · nothing |
+| Learning isolated per task family | yes · partial · no |
+| How a stored experience is matched | similarity · intent · explicit key · cluster + workflow |
+| Degradation measured | does the work measure interference or forgetting across a changing stream? |
+| Disjoint hold-out | is the agent graded on instances it was not trained on? |
+| Evidence kind | peer-reviewed · preprint · vendor writeup · blog · open source |
+
+**Source facts and lab assessments are kept apart.** What a work says about
+itself (title, venue, what it does, its mechanism) is stated conservatively
+and always carries provenance. The alignment columns are *this lab's*
+reading, and the UI says so on every row.
+
+The last column is the point: **could this work's own protocol have
+falsified its own claim?** A work that claims to learn but measures nothing
+under drift, or grades only on what it trained on, cannot be contradicted
+by its own results. On the current snapshot, 3 of 31 works clear that bar.
+
+Two knowledge graphs are generated from the same data: the **landscape
+graph** (works grouped by kind, and the concepts they implement) and the
+**mechanism graph** (the concepts grouped by what they rewrite). The tab
+also *collects*: `POST /api/landscape/works` adds a work to the local
+knowledge base, and it joins the matrix and the graphs.
 
 ## Key measurements (simulated policy, block 20 / eval 30, 20 iterations)
 
