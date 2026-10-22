@@ -114,13 +114,65 @@ def test_module_dependency_graph_is_generated_from_the_imports():
     assert "flowchart" in generated[0]["source"]
 
 
+def test_the_landscape_document_agrees_with_the_landscape_module():
+    """
+    The landscape design document must not drift from the code it describes.
+
+    It states the axes, the falsifiability rule, the number of works and
+    the verdict counts. Each of those is checkable, so each is checked.
+    """
+    from app import landscape as ls
+
+    doc = dd.document("07-landscape")
+    assert doc, "the landscape subsystem is not documented in the design tab"
+    text = "\n".join(
+        b.get("text", "") + b.get("source", "") + b.get("title", "")
+        for b in doc["blocks"] if b.get("kind") != "table"
+    ) + "\n" + "\n".join(
+        " ".join(r) for b in doc["blocks"] if b.get("kind") == "table"
+        for r in [b.get("header", []) + [c for row in b.get("rows", []) for c in row]]
+    )
+
+    # every axis the code knows must be named in the document
+    for dim in ls.dimensions():
+        assert dim["id"] in text, f"the document never names the {dim['id']} axis"
+        assert dim["label"] in text, f"the document never names {dim['label']!r}"
+
+    # the rule must be stated as the code implements it
+    assert "evaluation == yes" in text
+    assert "holdout == yes" in text
+
+    # the counts must be the real ones
+    works = len(ls.works())
+    assert f"{works} works" in text, \
+        f"the document does not state the real work count ({works})"
+    falsifiable = ls.summary()["falsifiable"]
+    partial = sum(1 for w in ls.works()
+                  if ls.assess(w)["verdict"] == "partially falsifiable")
+    assert f"**{falsifiable}** is falsifiable" in text, \
+        f"the document states the wrong falsifiable count ({falsifiable})"
+    assert f"**{partial}** are partially" in text, \
+        f"the document states the wrong partial count ({partial})"
+
+    # the two graphs it names must exist
+    assert ls.landscape_graph()["nodes"] > 0
+    assert ls.mechanism_graph()["surfaces"]
+    assert "landscape graph" in text
+    assert "mechanism graph" in text
+
+    # the local table it names must be in the schema
+    from app.db import SCHEMA
+    assert "CREATE TABLE IF NOT EXISTS landscape_entries" in SCHEMA
+
+
 def test_documents_name_modules_that_exist():
     """The module map must name the modules that are actually there."""
     from app import (benchmarks, cost, db, designs, envs, evolvers, flows,
-                      harness, llm, main, metrics, policy, retrieval, runner,
-                      stats, streams)
+                      harness, landscape, llm, main, metrics, policy, retrieval,
+                      runner, stats, streams)
     modules = [benchmarks, cost, db, designs, envs, evolvers, flows, harness,
-               llm, main, metrics, policy, retrieval, runner, stats, streams]
+               landscape, llm, main, metrics, policy, retrieval, runner, stats,
+               streams]
     text = "\n".join(p.read_text() for p in DOCS.glob("*.md"))
     for m in modules:
         name = m.__name__.split(".")[-1]

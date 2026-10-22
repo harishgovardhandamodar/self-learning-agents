@@ -257,7 +257,7 @@ LAYERS: Dict[str, str] = {
     "harness": "engine", "runner": "engine",
     "metrics": "measure", "stats": "measure", "cost": "measure",
     "benchmarks": "judge", "suite": "judge", "flows": "judge",
-    "designs": "support", "design_docs": "support",
+    "designs": "support", "design_docs": "support", "landscape": "support",
     "llm": "infra", "db": "infra", "main": "surface",
 }
 
