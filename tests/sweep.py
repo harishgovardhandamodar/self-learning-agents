@@ -89,7 +89,8 @@ async def main() -> None:
     ap.add_argument("--out", default="")
     ap.add_argument("--refresh-benchmarks", default="",
                     help="write the measured bands to this JSON file and use it "
-                         "as the suite's reference")    args = ap.parse_args()
+                         "as the suite's reference")
+    args = ap.parse_args()
 
     scenarios = [s for s in args.scenarios.split(",") if s]
     evolvers = list(EVOLVERS) if args.evolvers == "all" else args.evolvers.split(",")
