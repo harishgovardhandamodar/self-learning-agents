@@ -27,6 +27,23 @@ ITERS=${2:-3}
 BASE=${SLA_URL:-http://localhost:8220}
 AUDIT_OUT=${SLA_AUDIT_OUT:-/tmp/sla_ui_audit}
 
+# Two profiles, because a gate nobody can afford to run is not a gate.
+#
+#   core (default)  8 scenarios, ~1 min a round -> 50 rounds in ~45 min.
+#                   Covers the paper's four drift types, two per-domain drift
+#                   streams, the domain+workflow combination and a revisit.
+#   full            13 scenarios, ~2.5 min a round -> 50 rounds in ~2 h.
+#                   Adds the interleaved, recurring, long-horizon and
+#                   adversarial-ordering shapes.
+PROFILE=${PROFILE:-core}
+if [ "$PROFILE" = "full" ]; then
+  SCENARIOS="topic,workflow,domain,compound,healthcare-drift,trading-drift,science-drift,domain-workflow,revisit,interleaved,recurring,long-horizon,hard-order"
+  EVAL_OVERRIDE="long-horizon=12"
+else
+  SCENARIOS="topic,workflow,domain,compound,healthcare-drift,trading-drift,domain-workflow,revisit"
+  EVAL_OVERRIDE=""
+fi
+
 if ! curl -sf -m 5 "$BASE/api/health" >/dev/null; then
   echo "ERROR: lab not reachable at $BASE - start it with: docker compose up -d --build" >&2
   exit 2
@@ -44,7 +61,7 @@ export NODE_PATH="${NODE_PATH:-/tmp/node_modules}"
 FAIL=0
 for round in $(seq 1 "$ROUNDS"); do
   echo "=============================================================="
-  echo "round $round/$ROUNDS   sweep iterations=$ITERS"
+  echo "round $round/$ROUNDS   sweep iterations=$ITERS  profile=$PROFILE"
   echo "=============================================================="
 
   # An unreachable lab is an infrastructure problem, not a regression.
@@ -55,10 +72,15 @@ for round in $(seq 1 "$ROUNDS"); do
     break
   fi
 
-  python3 -m tests.sweep --iterations "$ITERS" --block 20 --eval 30 --jobs 8 \
-    --scenarios topic,workflow,domain,compound,healthcare-drift,trading-drift,science-drift,domain-workflow,revisit,interleaved,recurring,long-horizon,hard-order \
-    --eval-by-scenario "long-horizon=12" \
-    --out "/tmp/sla_sweep_r${round}.json" 2>&1 | tail -8
+  if [ -n "$EVAL_OVERRIDE" ]; then
+    python3 -m tests.sweep --iterations "$ITERS" --block 20 --eval 30 --jobs 8 \
+      --scenarios "$SCENARIOS" --eval-by-scenario "$EVAL_OVERRIDE" \
+      --out "/tmp/sla_sweep_r${round}.json" 2>&1 | tail -8
+  else
+    python3 -m tests.sweep --iterations "$ITERS" --block 20 --eval 30 --jobs 8 \
+      --scenarios "$SCENARIOS" \
+      --out "/tmp/sla_sweep_r${round}.json" 2>&1 | tail -8
+  fi
   sweep_rc=$?
   if [ $sweep_rc -ne 0 ]; then
     echo "round $round: sweep FAILED (rc=$sweep_rc)"
