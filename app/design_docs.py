@@ -25,22 +25,63 @@ DESIGN_DIR = Path(__file__).resolve().parent.parent / "design"
 KNOWN_FENCE_LANGUAGES = {"mermaid", "python", "bash", "json", "text"}
 
 
+# Documents that carry a generated diagram, injected at render time.
+# The marker in the markdown is replaced by the live source, so the picture
+# is measured from the code rather than maintained by hand.
+#
+# The source is looked up lazily: the generator is defined further down.
+GENERATED_BLOCKS: Dict[str, Dict[str, Any]] = {
+    "05-evaluation-suite": {
+        "marker": "<!-- GENERATED: module-dependencies -->",
+        "kind": "mermaid",
+        "source": "module_dependency_diagram",
+    },
+}
+
+
 def list_documents() -> List[Dict[str, Any]]:
     """Every design document, in order, with its title and outline."""
     docs = []
     for path in sorted(DESIGN_DIR.glob("*.md")):
         text = path.read_text()
         title = _first_heading(text) or path.stem
+        blocks = parse_markdown(text)
+        spec = GENERATED_BLOCKS.get(path.stem)
+        if spec:
+            blocks = _inject_generated(blocks, spec)
         docs.append({
             "id": path.stem,
             "file": path.name,
             "title": title,
             "summary": _first_paragraph(text),
             "outline": _outline(text),
-            "blocks": parse_markdown(text),
+            "blocks": blocks,
         })
     return docs
 
+
+def _inject_generated(blocks: List[Dict[str, Any]],
+                      spec: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Replace the marker paragraph with the generated diagram."""
+    source = spec["source"]
+    if isinstance(source, str):
+        source = globals().get(source, "")
+    if callable(source):
+        source = source()
+    if not source:
+        return blocks
+    out: List[Dict[str, Any]] = []
+    for b in blocks:
+        if b.get("kind") == "paragraph" and spec["marker"] in b.get("text", ""):
+            before, after = b["text"].split(spec["marker"], 1)
+            if before.strip():
+                out.append({"kind": "paragraph", "text": before.strip()})
+            out.append({"kind": spec["kind"], "source": source, "generated": True})
+            if after.strip():
+                out.append({"kind": "paragraph", "text": after.strip()})
+            continue
+        out.append(b)
+    return out
 
 def document(doc_id: str) -> Optional[Dict[str, Any]]:
     for doc in list_documents():
@@ -205,3 +246,79 @@ def diagram_stats() -> Dict[str, Any]:
             if b["kind"] == "mermaid":
                 diagrams += 1
     return {"documents": len(docs), "diagrams": diagrams, "blocks": kinds}
+
+
+# --------------------------------------------------- generated module graph
+
+# The layers, used to colour the dependency diagram.
+LAYERS: Dict[str, str] = {
+    "envs": "spec", "streams": "spec",
+    "retrieval": "engine", "evolvers": "engine", "policy": "engine",
+    "harness": "engine", "runner": "engine",
+    "metrics": "measure", "stats": "measure", "cost": "measure",
+    "benchmarks": "judge", "suite": "judge", "flows": "judge",
+    "designs": "support", "design_docs": "support",
+    "llm": "infra", "db": "infra", "main": "surface",
+}
+
+
+def module_dependencies() -> Dict[str, List[str]]:
+    """The real import graph of the app package, read from the source."""
+    import ast
+
+    app_dir = Path(__file__).resolve().parent
+    graph: Dict[str, List[str]] = {}
+    for path in sorted(app_dir.glob("*.py")):
+        name = path.stem
+        if name == "__init__":
+            continue
+        deps: List[str] = []
+        try:
+            tree = ast.parse(path.read_text())
+        except Exception:
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.level == 1:
+                # `from . import x` has module=None and the names carry the
+                # modules; `from .x import y` has module="x".
+                targets = []
+                if node.module:
+                    targets.append(node.module.split(".")[0])
+                else:
+                    targets.extend(a.name.split(".")[0] for a in node.names)
+                for target in targets:
+                    if target != name and target not in deps:
+                        deps.append(target)
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name.startswith("app."):
+                        target = alias.name.split(".")[1]
+                        if target != name and target not in deps:
+                            deps.append(target)
+        graph[name] = sorted(deps)
+    return graph
+
+
+def module_dependency_diagram() -> str:
+    """
+    The module dependency graph, generated from the imports.
+
+    Hand-drawn module maps drift; this one cannot. It is the same discipline
+    the reference bands follow: the picture is measured, not asserted.
+    """
+    graph = module_dependencies()
+    lines = ["flowchart LR"]
+    for name in graph:
+        layer = LAYERS.get(name, "other")
+        lines.append(f'  {name}["{name}.py<br/>{layer}"]')
+    for name, deps in graph.items():
+        for dep in deps:
+            if dep in graph:
+                lines.append(f"  {name} --> {dep}")
+    grouped: Dict[str, List[str]] = {}
+    for name in graph:
+        grouped.setdefault(LAYERS.get(name, "other"), []).append(name)
+    for layer, members in grouped.items():
+        lines.append(f'  classDef {layer} fill:#16283a,stroke:#5aa9ff,color:#d7dee9;')
+        lines.append("  class " + ",".join(members) + f" {layer};")
+    return "\n".join(lines)

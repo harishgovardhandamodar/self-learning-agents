@@ -70,6 +70,14 @@ flowchart TB
   DESIGNS --> API
 ```
 
+## Module map
+
+The layers below are how the code is organised. The dependency graph that
+follows is **generated from the imports**, not drawn by hand, so it cannot
+drift from the code.
+
+<!-- GENERATED: module-dependencies -->
+
 ## The measurement pipeline
 
 ```mermaid

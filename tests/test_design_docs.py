@@ -91,6 +91,29 @@ const items = {payload};
     assert "0 failed" in out, out[-3000:]
 
 
+def test_module_dependency_graph_is_generated_from_the_imports():
+    """The module map is measured, not drawn: it must match the real imports."""
+    from app import design_docs as dd
+
+    graph = dd.module_dependencies()
+    assert "main" in graph and "runner" in graph
+    # The runner really does depend on the evolvers, the policy and the router.
+    for dep in ("evolvers", "policy", "retrieval", "metrics"):
+        assert dep in graph["runner"], graph["runner"]
+    # And the API really does depend on the suite and the benchmarks.
+    for dep in ("suite", "benchmarks", "designs"):
+        assert dep in graph["main"], graph["main"]
+    # No module may depend on itself.
+    for name, deps in graph.items():
+        assert name not in deps
+
+    # The generated diagram is injected into the module-map document.
+    doc = dd.document("05-evaluation-suite")
+    generated = [b for b in doc["blocks"] if b.get("generated")]
+    assert generated, "the module-dependency diagram was not injected"
+    assert "flowchart" in generated[0]["source"]
+
+
 def test_documents_name_modules_that_exist():
     """The module map must name the modules that are actually there."""
     from app import (benchmarks, cost, db, designs, envs, evolvers, flows,
