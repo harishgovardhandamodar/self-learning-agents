@@ -895,13 +895,14 @@ async function loadSuiteReport() {
       return;
     }
     const cols = ["terminal_advantage", "plasticity", "stability", "interference", "forgetting"];
-    let h = `<table class="cmp"><tr><th>stream</th><th>evolver</th><th>n</th>
+    let h = `<table class="cmp"><tr><th>stream</th><th>evolver</th><th>geometry</th><th>n</th>
       ${cols.map((c) => `<th title="${esc(glossary[c]?.meaning || "")}">${esc(glossary[c]?.short || c)}</th>`).join("")}
       <th>margin</th><th>effect</th><th>significant</th><th>guardrails</th><th>units</th></tr>`;
     rep.rows.forEach((r) => {
       const sig = r.is_best ? `<span class="pill ok">best</span>`
         : (r.significant ? `<span class="pill ok">yes</span>` : `<span class="pill">no</span>`);
-      h += `<tr><td>${esc(r.stream)}</td><td>${esc(r.evolver)}</td><td>${r.n}</td>` +
+      h += `<tr><td>${esc(r.stream)}</td><td>${esc(r.evolver)}${r.is_reference ? ' <span class="pill">ref</span>' : ""}</td>` +
+        `<td class="meta">b${r.block_size}/e${r.n_eval}</td><td>${r.n}</td>` +
         cols.map((c) => `<td>${r.metrics[c] == null ? "–" : r.metrics[c]}</td>`).join("") +
         `<td>${r.margin_vs_best == null ? "–" : r.margin_vs_best}</td>` +
         `<td>${r.effect_size == null ? "–" : `${r.effect_size} (${esc(r.effect_label || "")})`}</td>` +

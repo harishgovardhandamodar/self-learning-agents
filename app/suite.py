@@ -189,17 +189,20 @@ def _ceiling_capture(rows: List[Dict[str, Any]], metric: str) -> List[Dict[str, 
             continue
         best = max(real, key=lambda r: r["metrics"][metric])
         got = best["metrics"][metric]
-        meaningful = ceil_mean >= 5.0
+        # A capture percentage is only worth reporting when the ceiling is a
+        # real gain and both cells rest on enough runs to mean anything.
+        meaningful = ceil_mean >= 5.0 and best.get("n", 0) >= 3 and \
+            ceiling.get("n", 0) >= 3
         out.append({
             "stream": stream,
             "ceiling": round(ceil_mean, 3),
             "best_real": best["evolver"],
             "best_mean": round(got, 3),
-            # A capture percentage over a near-zero ceiling is noise: the
-            # ratio is only meaningful when there is a real gain to capture.
             "captured_pct": round(got / ceil_mean * 100, 1) if (ceil_mean and meaningful) else None,
             "headroom_pp": round(ceil_mean - got, 3),
             "meaningful": meaningful,
+            "n": best.get("n", 0),
+            "ceiling_n": ceiling.get("n", 0),
         })
     return out
 
