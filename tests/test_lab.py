@@ -222,6 +222,36 @@ def test_generic_fallback_is_actually_wrong():
                 f"{gid}: the generic fallback graded as correct"
 
 
+def test_reference_data_is_not_in_the_runtime_volume():
+    """
+    The reference data must live outside the runtime data directory.
+
+    The runtime Docker volume is mounted at /app/data, which SHADOWS
+    anything shipped in the image at that path. When the measured bands
+    lived in data/, the container silently served the one-scenario
+    fallback while the repo carried the eighteen-scenario bands - a
+    difference nobody would notice without looking at the source.
+    """
+    from app import benchmarks
+
+    root = Path(__file__).resolve().parent.parent
+    # The PRIMARY candidate must sit outside the runtime volume; a fallback
+    # inside it is fine, it is only reached if the shipped copy is missing.
+    primary = benchmarks.BENCHMARK_CANDIDATES[0]
+    assert primary.parent != root / "data", \
+        f"the primary benchmark path {primary} is inside the runtime volume"
+    # The shipped copy must actually be found, and must be the measured one.
+    data = benchmarks.load_bands()
+    assert len(data.get("bands", {})) >= 18, \
+        f"only {len(data.get('bands', {}))} scenarios in the reference bands"
+    assert "built-in defaults" not in data.get("source", ""), \
+        "the shipped reference bands were not found"
+
+    # And the same for the live validation record.
+    live = [p for p in benchmarks.LIVE_VALIDATION_CANDIDATES if p.exists()]
+    assert live, "the live validation record is missing"
+
+
 def test_benchmark_bands_still_hold():
     """
     The measured bands are the lab's regression gate.

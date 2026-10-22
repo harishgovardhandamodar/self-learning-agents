@@ -336,21 +336,24 @@ def _calibration_note() -> Optional[Dict[str, Any]]:
     does not have. The rankings transfer; the magnitudes do not.
     """
     import json
-    from pathlib import Path
-    path = Path(__file__).resolve().parent.parent / "data" / "live_validation.json"
-    try:
-        data = json.loads(path.read_text())
-    except Exception:
-        return None
-    return {
-        "summary": (f"the local model scored {data['live_baseline_pct']}% on the "
-                    f"{data['family']} family against the simulator's "
-                    f"{data['simulated_baseline_pct']}% "
-                    f"({data['delta_pp']:+.0f}pp)"),
-        "reading": data.get("reading", ""),
-        "calibration": data.get("calibration", ""),
-        "source": path.name,
-    }
+    from . import benchmarks as bm
+    for path in bm.LIVE_VALIDATION_CANDIDATES:
+        if not path.exists():
+            continue
+        try:
+            data = json.loads(path.read_text())
+        except Exception:
+            continue
+        return {
+            "summary": (f"the local model scored {data['live_baseline_pct']}% on the "
+                        f"{data['family']} family against the simulator's "
+                        f"{data['simulated_baseline_pct']}% "
+                        f"({data['delta_pp']:+.0f}pp)"),
+            "reading": data.get("reading", ""),
+            "calibration": data.get("calibration", ""),
+            "source": path.name,
+        }
+    return None
 
 
 def power_report(cells: List[Dict[str, Any]], margin: float = 5.0) -> List[Dict[str, Any]]:

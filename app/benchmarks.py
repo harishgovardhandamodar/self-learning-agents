@@ -22,10 +22,27 @@ Regenerate with:
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-BENCHMARK_PATH = (Path(__file__).resolve().parent.parent / "data" / "benchmarks.json")
+# Where the shipped reference data lives.
+#
+# The runtime database lives in a Docker volume mounted at /app/data, which
+# SHADOWS anything shipped in the image at that path. Reference data
+# therefore lives in its own directory, outside the volume, and the search
+# order below prefers an explicit override, then the shipped copy, then the
+# runtime directory (so a regenerated file can be mounted over it).
+REFERENCE_DIR = Path(os.environ.get(
+    "SLA_REFERENCE_DIR", str(Path(__file__).resolve().parent.parent / "reference")))
+BENCHMARK_CANDIDATES = [
+    REFERENCE_DIR / "benchmarks.json",
+    Path(__file__).resolve().parent.parent / "data" / "benchmarks.json",
+]
+LIVE_VALIDATION_CANDIDATES = [
+    REFERENCE_DIR / "live_validation.json",
+    Path(__file__).resolve().parent.parent / "data" / "live_validation.json",
+]
 
 # What each metric means, in the paper's notation. Shown next to the number
 # so the dashboard does not require the paper to be read.
@@ -141,15 +158,19 @@ BAND_NOTES: Dict[str, str] = {
 
 def load_bands() -> Dict[str, Any]:
     """The shipped bands, preferring a sweep file if one has been generated."""
-    if BENCHMARK_PATH.exists():
+    for path in BENCHMARK_CANDIDATES:
+        if not path.exists():
+            continue
         try:
-            data = json.loads(BENCHMARK_PATH.read_text())
+            data = json.loads(path.read_text())
             if data.get("bands"):
+                data["source_path"] = str(path)
                 return data
         except Exception:
-            pass
+            continue
     return {"bands": DEFAULT_BANDS, "notes": BAND_NOTES,
-            "source": "built-in defaults (20-iteration sweep, block 20 / eval 30)"}
+            "source": "built-in defaults (20-iteration sweep, block 20 / eval 30)",
+            "source_path": ""}
 
 
 def band_for(scenario: str, evolver: str, metric: str) -> Optional[Dict[str, float]]:

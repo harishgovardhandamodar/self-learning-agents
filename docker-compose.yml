@@ -31,6 +31,10 @@ services:
     volumes:
       - sla-data:/app/data
       - ./exports:/app/exports
+      # The measured reference bands and the live-validation record ship in
+      # the image at /app/reference (outside the runtime volume, which would
+      # shadow them). Mount a regenerated copy here to override them.
+      # - ./reference:/app/reference:ro
       # The AI-Agents-Patterns catalog: enables the pattern picker and the
       # pattern/category flow diagrams. Comment the mount out if the
       # checkout is not on this host - the lab still works without it.

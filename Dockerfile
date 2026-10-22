@@ -11,8 +11,11 @@ RUN pip install -r requirements.txt
 
 COPY app/ ./app/
 COPY web/ ./web/
+COPY reference/ ./reference/
 
-# Writable at runtime (mounted as volumes in compose)
+# Writable at runtime (mounted as volumes in compose). The reference data
+# lives OUTSIDE this directory on purpose: the runtime volume is mounted at
+# /app/data and would shadow anything shipped there.
 RUN mkdir -p /app/data /app/exports
 
 EXPOSE 8220

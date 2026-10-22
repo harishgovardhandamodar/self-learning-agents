@@ -102,12 +102,19 @@ just a number. `tests/test_lab.py` asserts the bands still hold — if a
 harness change moves a cell outside its own band, the bands are stale and
 the test says so.
 
-The bands ship in `data/benchmarks.json` and are regenerated with:
+The bands ship in `reference/benchmarks.json` — deliberately *outside*
+`data/`, because the runtime Docker volume is mounted at `/app/data` and
+would shadow anything shipped there. (That shadowing was a real bug: the
+container served the one-scenario fallback while the repo carried the
+eighteen-scenario bands.) The live comparison ships beside it in
+`reference/live_validation.json`.
+
+Regenerate with:
 
 ```bash
-python3 -m tests.sweep --iterations 20 --block 20 --eval 30 \
-    --scenarios topic,workflow,domain,compound,healthcare-drift,trading-drift,science-drift,domain-workflow,revisit \
-    --refresh-benchmarks data/benchmarks.json
+python3 -m tests.sweep --iterations 50 --block 20 --eval 30 \
+    --scenarios topic,workflow,domain,compound,healthcare-drift,trading-drift,science-drift,domain-workflow,revisit,interleaved,recurring,long-horizon,hard-order \
+    --refresh-benchmarks reference/benchmarks.json
 ```
 
 ## What lives here
@@ -293,7 +300,7 @@ where the simulator scores **50%**. Two consequences:
   near zero. The suite's plasticity numbers are headroom, not expected
   production gains.
 
-The measured gap is stored in `data/live_validation.json` and shown in
+The measured gap is stored in `reference/live_validation.json` and shown in
 the Suite tab's advice panel, so the caveat travels with the result.
 
 ### Reading a result
