@@ -20,6 +20,7 @@
     <button data-tab="coverage" role="tab" aria-selected="false">Coverage</button>
     <button data-tab="suite" role="tab" aria-selected="false">Suite</button>
     <button data-tab="patterns" role="tab" aria-selected="false">Patterns</button>
+    <button data-tab="design" role="tab" aria-selected="false">Design</button>
   </nav>
   <div id="llm-health" class="health" title="model backend" role="status">llm: …</div>
 </header>
@@ -314,8 +315,32 @@
       AI-Agents-Patterns catalog.</p>
     <div id="category-flows" class="flows"></div>
   </section>
+
+  <!-- ============================================================== DESIGN -->
+  <section id="tab-design" class="tab" role="tabpanel">
+    <h2>Design &amp; architecture</h2>
+    <p class="hint" id="design-summary">How this app is put together, and why.
+      Every diagram is Mermaid source stored with the prose it explains and
+      rendered here at view time — nothing is a screenshot.</p>
+    <div class="row">
+      <div class="col col-rail">
+        <h3>Documents</h3>
+        <div id="design-rail" class="cards"></div>
+      </div>
+      <div class="col">
+        <div class="row-btns">
+          <label for="design-outline" class="inline">Sections
+            <select id="design-outline" class="filter" aria-label="Jump to a section"></select>
+          </label>
+          <span id="design-stats" class="meta"></span>
+        </div>
+        <article id="design-doc" class="doc"></article>
+      </div>
+    </div>
+  </section>
 </main>
 <script src="/static/vendor/mermaid.min.js"></script>
+<script src="/static/js/markdown.js"></script>
 <script src="/static/js/app.js"></script>
 </body>
 </html>

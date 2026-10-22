@@ -136,6 +136,7 @@ python3 -m tests.sweep --iterations 50 --block 20 --eval 30 \
 | `app/metrics.py` | Paper metrics (Eq. 8–11) + failure-mode detectors |
 | `app/runner.py` | Stream protocol: train → checkpoint → evaluate on held-out sets |
 | `app/designs.py` | Design specs, pattern picker (AI-Agents-Patterns catalog), guardrails, domain playbooks |
+| `app/design_docs.py` | Parses `design/*.md` into blocks for the Design tab |
 | `app/benchmarks.py` | Measured reference bands (mean ± std per cell) + the metric glossary |
 | `app/flows.py` | Mermaid generators: the agent flow drawn from a design, the stream it faces |
 | `app/stats.py` | Welch t-test, effect size, Holm correction, power, cell ranking |
@@ -147,6 +148,7 @@ python3 -m tests.sweep --iterations 50 --block 20 --eval 30 \
 | `tests/sweep.py` | N-iteration sweep with mean ± std aggregation |
 | `tests/live_validation.py` | The same stream live and simulated, side by side |
 | `tests/ui_audit.js` | Browser-driven UI audit (Playwright) |
+| `tests/test_design_docs.py` | The design documents: they parse, and they agree with the code |
 | `tests/iteration_loop.sh` | The 20-round gate: sweep + tests + UI audit |
 
 The suite now has a floor, five methods, and a ceiling. The **oracle** is
@@ -332,6 +334,33 @@ a Welch t-test on the margin over the runner-up, and states the caveats
 report also carries a **power** table: how many iterations each cell
 would need to resolve a 5pp margin, so iterations are spent where they
 buy resolution.
+
+## Design & architecture
+
+The **Design** tab carries the app's own architecture documentation, in the
+same form as the AI-Agents-Patterns dashboard: numbered markdown documents
+under `design/`, with Mermaid source stored beside the prose that explains
+it and rendered at view time. **Nothing is a screenshot** — a diagram that
+has changed cannot be mistaken for a correct one.
+
+| document | what it covers |
+|---|---|
+| `01-system-context.md` | what the system is, principles, context diagram, container overview, trust boundaries, deployment |
+| `02-uml.md` | component diagram, core domain classes, the evolver hierarchy, the interface contracts |
+| `03-control-flow.md` | the run transaction, the episode transaction, the training activity, the run state machine, the data flow |
+| `04-data-model.md` | ER diagram of the SQLite records, the harness snapshot, the reference data, the cell identity rule |
+| `05-evaluation-suite.md` | module map, measurement pipeline, the comparison transaction, the statistical layers, the verdict path, the scenario shapes, what the suite does not measure |
+| `06-workflows.md` | the path a person walks: design, prove it learns, prove it does not break, export; plus the guardrail audit and the live path |
+
+30 diagrams in all: UML (`classDiagram`), transactions (`sequenceDiagram`),
+activity and state (`flowchart`, `stateDiagram-v2`), the data model
+(`erDiagram`), and module maps.
+
+The documents are checked against the code, so they cannot drift: a test
+asserts that every module named exists, that the endpoint count, family
+count and scenario count stated are the real ones, that the tables named
+are in the schema, that the evolvers named are the ones registered, and
+that every diagram parses with mermaid's own parser.
 
 ## Key measurements (simulated policy, block 20 / eval 30, 20 iterations)
 

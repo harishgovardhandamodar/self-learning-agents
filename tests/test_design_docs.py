@@ -1,0 +1,139 @@
+"""
+The design documents: they must parse, and they must stay true.
+
+Two gates:
+
+  1. Every mermaid source in design/*.md is validated with mermaid's own
+     parser, so a document cannot ship a diagram that fails to render.
+  2. The documents' factual claims are checked against the code, so they
+     cannot drift: the modules named must exist, the tables named must be
+     in the schema, the evolvers named must be the evolvers registered.
+"""
+import json
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from app import design_docs as dd
+
+REPO = Path(__file__).resolve().parent.parent
+DOCS = REPO / "design"
+
+
+def _all_mermaid() -> list:
+    out = []
+    for doc in dd.list_documents():
+        for b in doc["blocks"]:
+            if b["kind"] == "mermaid":
+                out.append((doc["id"], b["source"]))
+    return out
+
+
+def test_every_document_parses_into_known_blocks():
+    docs = dd.list_documents()
+    assert len(docs) >= 6, "the design tab needs its documents"
+    for d in docs:
+        assert d["title"], d["id"]
+        assert d["blocks"], d["id"]
+        assert d["outline"], d["id"]
+
+
+def test_the_documentation_covers_the_requested_diagram_kinds():
+    """UML, activity, transaction, module and mermaid diagrams are all present."""
+    sources = "\n".join(s for _, s in _all_mermaid())
+    assert "classDiagram" in sources, "no UML class diagram"
+    assert "sequenceDiagram" in sources, "no transaction/sequence diagram"
+    assert "stateDiagram" in sources, "no state/activity diagram"
+    assert "erDiagram" in sources, "no data model diagram"
+    # a module map: a flowchart whose subgraphs are the layers
+    assert "subgraph" in sources, "no module/component map"
+    # activity: a flowchart with decision nodes
+    assert re.search(r"\{.*\}", sources), "no decision nodes (activity flow)"
+
+
+def test_every_mermaid_diagram_is_valid():
+    """Validate with mermaid's own parser under jsdom."""
+    if not (shutil.which("node") and (REPO / "web" / "vendor" / "mermaid.min.js").exists()
+            and Path("/tmp/node_modules/jsdom").exists()):
+        print("SKIP: node, jsdom or the vendored mermaid build is missing")
+        return
+    items = _all_mermaid()
+    payload = json.dumps([s for _, s in items])
+    script = f'''
+const {{ JSDOM }} = require("/tmp/node_modules/jsdom");
+const dom = new JSDOM("<!doctype html><html><body></body></html>", {{
+  pretendToBeVisual: true, url: "http://localhost/",
+}});
+global.window = dom.window;
+global.document = dom.window.document;
+global.navigator = dom.window.navigator;
+const mermaid = require({json.dumps(str(REPO / "web" / "vendor" / "mermaid.min.js"))});
+mermaid.initialize({{ startOnLoad: false, securityLevel: "strict" }});
+const items = {payload};
+(async () => {{
+  let bad = 0;
+  for (let i = 0; i < items.length; i++) {{
+    try {{ await mermaid.parse(items[i]); }}
+    catch (e) {{ bad++; console.log("PARSE FAIL [" + i + "]: " + String(e).slice(0, 300)); }}
+  }}
+  console.log("checked " + items.length + " diagrams, " + bad + " failed");
+  process.exit(bad ? 1 : 0);
+}})();
+'''
+    r = subprocess.run(["node", "-e", script], capture_output=True, text=True,
+                       timeout=300)
+    out = (r.stdout or "") + (r.stderr or "")
+    assert r.returncode == 0, out[-4000:]
+    assert "0 failed" in out, out[-3000:]
+
+
+def test_documents_name_modules_that_exist():
+    """The module map must name the modules that are actually there."""
+    from app import (benchmarks, cost, db, designs, envs, evolvers, flows,
+                      harness, llm, main, metrics, policy, retrieval, runner,
+                      stats, streams)
+    modules = [benchmarks, cost, db, designs, envs, evolvers, flows, harness,
+               llm, main, metrics, policy, retrieval, runner, stats, streams]
+    text = "\n".join(p.read_text() for p in DOCS.glob("*.md"))
+    for m in modules:
+        name = m.__name__.split(".")[-1]
+        assert (REPO / "app" / (name + ".py")).exists()
+        assert f"{name}.py" in text, \
+            f"the documents never mention the {name} module"
+
+
+def test_documents_name_the_real_tables_and_evolvers():
+    from app.db import SCHEMA
+    from app.evolvers import EVOLVERS
+    text = "\n".join(p.read_text() for p in DOCS.glob("*.md"))
+    for table in ("designs", "runs", "checkpoints", "traces", "streams"):
+        assert table in text, f"the data model never mentions the {table} table"
+        assert f"CREATE TABLE IF NOT EXISTS {table}" in SCHEMA, \
+            f"the {table} table is not in the schema"
+    for eid in EVOLVERS:
+        assert eid in text, f"the documents never mention the {eid} evolver"
+
+
+def test_documents_agree_with_the_api_surface():
+    """The API diagram must state the number of endpoints that exist."""
+    from app.main import app
+    routes = {r.path for r in app.routes if getattr(r, "path", "").startswith("/api")}
+    text = (DOCS / "01-system-context.md").read_text()
+    assert f"{len(routes)} endpoints" in text, \
+        f"the context document does not state the real endpoint count ({len(routes)})"
+    assert (DOCS / "02-uml.md").read_text().count(f"{len(routes)} endpoints") == 1
+
+
+def test_documents_state_the_scenario_and_family_counts():
+    from app import envs, streams as streams_mod
+    text = "\n".join(p.read_text() for p in DOCS.glob("*.md"))
+    assert f"{len(envs.all_groups())} families" in text, \
+        "the documents state a family count that is now wrong"
+    assert f"{len(streams_mod.SCENARIOS)} scenarios" in text, \
+        "the documents state a scenario count that is now wrong"
+    # the ordering permutations are counted separately, not folded in
+    assert f"{len(streams_mod.TOPIC_PERMUTATIONS)} orderings" in text

@@ -23,7 +23,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import benchmarks as benchmarks_mod
-from . import db, designs as designs_mod, envs, flows as flows_mod
+from . import db, designs as designs_mod, design_docs as design_docs_mod
+from . import envs, flows as flows_mod
 from . import metrics as metrics_mod
 from . import scaffold as scaffold_mod
 from . import stats as stats_mod
@@ -523,6 +524,27 @@ async def clear_runs(only_status: str = "") -> Dict[str, Any]:
         db.delete_run(r["id"])
         removed.append(r["id"])
     return {"deleted": len(removed), "run_ids": removed}
+
+
+@app.get("/api/design/docs")
+async def design_documents() -> Dict[str, Any]:
+    """
+    The design & architecture documents, parsed into blocks.
+
+    The documents are markdown with Mermaid source, stored under design/ and
+    rendered at view time — nothing here is a screenshot, so a diagram that
+    has changed cannot be mistaken for a correct one.
+    """
+    docs = design_docs_mod.list_documents()
+    return {"documents": docs, "stats": design_docs_mod.diagram_stats()}
+
+
+@app.get("/api/design/docs/{doc_id}")
+async def design_document(doc_id: str) -> Dict[str, Any]:
+    doc = design_docs_mod.document(doc_id)
+    if doc is None:
+        raise HTTPException(404, f"unknown design document '{doc_id}'")
+    return doc
 
 
 @app.get("/api/coverage")

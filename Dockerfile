@@ -11,6 +11,7 @@ RUN pip install -r requirements.txt
 
 COPY app/ ./app/
 COPY web/ ./web/
+COPY design/ ./design/
 COPY reference/ ./reference/
 
 # Writable at runtime (mounted as volumes in compose). The reference data

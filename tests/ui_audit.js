@@ -84,7 +84,7 @@ const note = (kind, msg, extra = {}) => problems.push({ kind, msg, ...extra });
     await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-${name}.png`), fullPage: true });
   }
 
-  for (const t of ['designs', 'runs', 'compare', 'reference', 'coverage', 'suite', 'patterns']) await tab(t);
+  for (const t of ['designs', 'runs', 'compare', 'reference', 'coverage', 'suite', 'patterns', 'design']) await tab(t);
 
   // ---------------------------------------------- batch launch (core workflow)
   await page.click('nav button[data-tab="runs"]');
@@ -188,6 +188,19 @@ const note = (kind, msg, extra = {}) => problems.push({ kind, msg, ...extra });
   const advice = await page.textContent('#s-advice');
   if (!advice || advice.trim().length < 20) note('ux', 'the suite advice panel is empty');
   await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-suite.png`), fullPage: true });
+
+  // --------------------------------------------------------- design tab
+  await page.click('nav button[data-tab="design"]');
+  await page.waitForTimeout(4000);
+  const docCards = await page.$$eval('#design-rail .card', (els) => els.length);
+  if (docCards < 4) note('ux', `design tab lists only ${docCards} documents`);
+  const designSvgs = await page.$$eval('#design-doc .md-diagram svg', (els) => els.length);
+  const designPending = await page.$$eval('#design-doc .md-diagram-loading', (els) => els.length);
+  if (!designSvgs) note('ux', 'no design diagram rendered');
+  if (designPending) note('ux', `${designPending} design diagram(s) never rendered`);
+  const designHeadings = await page.$$eval('#design-doc .md-h', (els) => els.length);
+  if (designHeadings < 3) note('ux', 'design document has no headings');
+  await page.screenshot({ path: path.join(OUT, `${String(++shot).padStart(2, '0')}-design.png`), fullPage: true });
 
   // --------------------------------------------------------- reference tab
   await page.click('nav button[data-tab="reference"]');

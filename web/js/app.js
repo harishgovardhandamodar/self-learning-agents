@@ -60,6 +60,7 @@ $$("nav button").forEach((b) => {
     if (b.dataset.tab === "reference") loadReference();
     if (b.dataset.tab === "coverage") loadCoverage();
     if (b.dataset.tab === "suite") { renderSuiteEvolvers(); loadSuiteReport(); loadSuiteAdvice(); }
+    if (b.dataset.tab === "design") loadDesignDocs();
     if (b.dataset.tab === "patterns") loadPatterns();
   };
 });
@@ -979,6 +980,74 @@ $("s-export-report").onclick = async () => {
     URL.revokeObjectURL(a.href);
     toast("Report exported", "ok");
   } catch (e) { toast(String(e.message || e), "err"); }
+};
+
+/* --------------------------------------------------------------- design */
+let designDocs = [];
+let designCurrent = null;
+
+async function loadDesignDocs() {
+  const host = $("design-rail");
+  try {
+    const res = await get("/api/design/docs");
+    designDocs = res.documents || [];
+    const stats = res.stats || {};
+    $("design-summary").textContent =
+      `How this app is put together, and why. ${stats.documents || 0} documents, ` +
+      `${stats.diagrams || 0} diagrams — every one of them Mermaid source stored ` +
+      `with the prose it explains and rendered here at view time, so nothing is a screenshot.`;
+    $("design-stats").textContent =
+      `${stats.documents || 0} documents · ${stats.diagrams || 0} diagrams`;
+  } catch (e) {
+    host.innerHTML = `<div class="empty">Could not load the design documents: ${esc(e.message || e)}</div>`;
+    return;
+  }
+  if (!designDocs.length) {
+    host.innerHTML = `<div class="empty">No design documents found.</div>`;
+    return;
+  }
+  host.innerHTML = designDocs.map((d, i) => `<div class="card clickable${i === 0 ? " sel" : ""}"
+      data-doc="${esc(d.id)}">
+      <h4>${esc(d.title)}</h4>
+      <div class="meta">${d.blocks.filter((b) => b.kind === "mermaid").length} diagrams · ${esc(d.file)}</div>
+      <p>${esc(d.summary || "")}</p>
+    </div>`).join("");
+  $$("#design-rail .card").forEach((card) => {
+    card.onclick = () => {
+      $$("#design-rail .card").forEach((c) => c.classList.remove("sel"));
+      card.classList.add("sel");
+      showDesignDoc(card.dataset.doc);
+    };
+  });
+  showDesignDoc(designDocs[0].id);
+}
+
+async function showDesignDoc(docId) {
+  const doc = designDocs.find((d) => d.id === docId);
+  if (!doc) return;
+  designCurrent = doc;
+  const host = $("design-doc");
+  host.innerHTML = `<div class="meta">loading ${esc(doc.title)}…</div>`;
+
+  // The section jump list.
+  const outline = $("design-outline");
+  outline.innerHTML = doc.outline.map((o) =>
+    `<option value="${esc(o.id)}">${esc(o.title)}</option>`).join("");
+
+  // Render the markdown, then fill the mermaid placeholders through the
+  // shared queue so thirty diagrams do not block the first paint.
+  const pending = [];
+  host.innerHTML = MD.document(doc, (id, src) => pending.push({ id, src }));
+  for (const p of pending) {
+    const el = document.getElementById(p.id);
+    if (el) await renderMermaid(el, p.src, p.id);
+  }
+  host.scrollIntoView({ block: "start" });
+}
+
+$("design-outline").onchange = (e) => {
+  const el = document.getElementById(e.target.value);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
 /* ------------------------------------------------------------- patterns */

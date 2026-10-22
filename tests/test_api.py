@@ -229,6 +229,28 @@ def test_run_reports_cost_and_efficiency():
     assert e is not None and "gain_pp" in e
 
 
+def test_design_documents_are_served_parsed():
+    r = client.get("/api/design/docs").json()
+    assert r["documents"], "no design documents"
+    assert r["stats"]["documents"] == len(r["documents"])
+    assert r["stats"]["diagrams"] >= 20, r["stats"]
+    doc = r["documents"][0]
+    assert doc["title"] and doc["outline"]
+    kinds = {b["kind"] for b in doc["blocks"]}
+    assert "heading" in kinds and "paragraph" in kinds
+    # every document carries at least one diagram
+    for d in r["documents"]:
+        assert any(b["kind"] == "mermaid" for b in d["blocks"]), d["id"]
+
+
+def test_design_document_by_id_and_404():
+    docs = client.get("/api/design/docs").json()["documents"]
+    one = client.get(f"/api/design/docs/{docs[0]['id']}")
+    assert one.status_code == 200
+    assert one.json()["id"] == docs[0]["id"]
+    assert client.get("/api/design/docs/does-not-exist").status_code == 404
+
+
 def test_benchmarks_endpoint_exposes_bands_and_glossary():
     b = client.get("/api/benchmarks").json()
     assert b["scenarios"], "no benchmark scenarios"
