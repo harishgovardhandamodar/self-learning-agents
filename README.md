@@ -69,13 +69,21 @@ through uuid randomness.
 ## The 50-iteration gate
 
 `tests/iteration_loop.sh` runs the whole loop 50 times against the live
-container. Each round: the mechanism sweep, the unit tests, and the
-browser-driven UI audit. It stops at the first failure and names it.
+container. Each round: the mechanism sweep, the unit and API tests, and
+the browser-driven UI audit. It stops at the first failure and names it.
 
 ```bash
 docker compose up -d --build
-./tests/iteration_loop.sh 50 3     # 50 rounds, 3 sweep iterations per cell
+./tests/iteration_loop.sh 50 3          # 50 rounds, core profile (~75 min)
+PROFILE=full ./tests/iteration_loop.sh 50 3   # every stream shape (~2 h)
 ```
+
+Two profiles, because a gate nobody can afford to run is not a gate:
+
+| profile | scenarios | per round | 50 rounds |
+|---|---|---|---|
+| `core` (default) | 8 — the paper's four drift types, two per-domain drift streams, the domain+workflow combination, a revisit | ~1.5 min | ~75 min |
+| `full` | 13 — adds interleaved, recurring, long-horizon and adversarial ordering | ~2.5 min | ~2 h |
 
 The UI audit (`tests/ui_audit.js`, Playwright) drives the real dashboard in
 a real browser and fails on: console errors, 4xx/5xx responses, horizontal
@@ -137,6 +145,7 @@ python3 -m tests.sweep --iterations 50 --block 20 --eval 30 \
 | `app/main.py` | FastAPI: designs, runs, batch runs, compare, benchmarks, export + the SPA |
 | `web/` | Vanilla-JS frontend (no build step) |
 | `tests/sweep.py` | N-iteration sweep with mean ± std aggregation |
+| `tests/live_validation.py` | The same stream live and simulated, side by side |
 | `tests/ui_audit.js` | Browser-driven UI audit (Playwright) |
 | `tests/iteration_loop.sh` | The 20-round gate: sweep + tests + UI audit |
 
