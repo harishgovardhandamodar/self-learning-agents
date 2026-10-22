@@ -199,7 +199,10 @@ h4.md-h { font-size:14px; color:var(--dim); }
 #l-matrix .pill { white-space:nowrap; }
 #l-works { max-height:none; }
 #l-works .card p { margin:5px 0; }
-#l-works a { color:var(--acc); }
+#l-works a { color:var(--acc); display:inline-block; padding:4px 0; }
+/* The source link sits inside a meta line, so it needs its own hit area
+   rather than the 14px the text alone would give it. */
+#l-works .meta a { padding:5px 0 5px 2px; }
 #l-add { margin-top:6px; }
 #l-add .row-btns { grid-column:1 / -1; }
 #l-graph-landscape, #l-graph-mechanism { min-height:120px; }

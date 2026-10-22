@@ -555,7 +555,7 @@
         "isolation": "partial",
         "retrieval": "explicit key",
         "evaluation": "partial",
-        "holdout": "partial",
+        "holdout": "yes",
         "evidence": "preprint"
       },
       "concepts": [
@@ -581,7 +581,7 @@
         "surface": "weights",
         "isolation": "yes",
         "retrieval": "none",
-        "evaluation": "yes",
+        "evaluation": "partial",
         "holdout": "yes",
         "evidence": "peer-reviewed"
       },
@@ -605,7 +605,7 @@
         "surface": "workflow",
         "isolation": "yes",
         "retrieval": "cluster + workflow",
-        "evaluation": "yes",
+        "evaluation": "partial",
         "holdout": "yes",
         "evidence": "preprint"
       },

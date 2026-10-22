@@ -1086,9 +1086,9 @@ function renderLandscapeStats(s) {
     <div class="metric"><div class="k">concepts</div><div class="v">${s.concepts}</div>
       <div class="s">the vocabulary the field shares</div></div>
     <div class="metric ${s.falsifiable === 0 ? "bad" : (s.falsifiable < s.works / 4 ? "warn" : "good")}">
-      <div class="k">falsifiable by their own protocol</div>
+      <div class="k">could falsify its own claim</div>
       <div class="v">${s.falsifiable}<span style="font-size:14px;color:var(--dim)"> / ${s.works}</span></div>
-      <div class="s">measure degradation AND use a disjoint hold-out</div></div>
+      <div class="s">measures degradation AND uses a disjoint hold-out</div></div>
     <div class="metric"><div class="k">axes</div><div class="v">${s.dimensions}</div>
       <div class="s">the lab's measurement dimensions</div></div>
     <div class="metric"><div class="k">snapshot</div><div class="v" style="font-size:16px">${esc(s.version || "-")}</div>

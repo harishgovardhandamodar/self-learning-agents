@@ -115,18 +115,23 @@ def assess(work: Dict[str, Any]) -> Dict[str, Any]:
                     "partially falsifiable" if partial else
                     "not falsifiable by its own protocol"),
         "falsifiable": falsifiable,
-        "why": _why(a),
+        "why": _why(a, work),
     }
 
 
-def _why(a: Dict[str, Any]) -> str:
+def _why(a: Dict[str, Any], work: Dict[str, Any] = None) -> str:
     bits = []
     if a["evaluation"] != "yes":
-        bits.append("it does not measure interference or forgetting across a changing stream")
+        if a["evaluation"] == "partial":
+            bits.append("it measures some effect of learning, but not interference or "
+                        "forgetting across a changing stream")
+        else:
+            bits.append("it does not measure interference or forgetting across a changing stream")
     if a["holdout"] != "yes":
         bits.append("it is not graded on instances it was not trained on")
     if not bits:
-        return "it measures degradation across a changing stream on a disjoint hold-out"
+        return ("it measures degradation across a changing stream on a disjoint hold-out, "
+                "so a change that made things worse would have been caught")
     return "because " + " and ".join(bits)
 
 
