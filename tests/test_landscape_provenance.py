@@ -16,6 +16,7 @@ Only papers are checked. Products, frameworks and blogs are checked by
 reachability, not by title, because a vendor page's <title> is not the
 work's title.
 """
+import json
 import re
 import sys
 import time
@@ -30,6 +31,23 @@ from app import landscape as ls
 
 REPO = Path(__file__).resolve().parent.parent
 ARXIV_API = "http://export.arxiv.org/api/query"
+CACHE = Path(__file__).resolve().parent / ".arxiv_verified.json"
+CACHE_TTL = 7 * 24 * 3600  # a week
+
+
+def _load_cache() -> dict:
+    try:
+        data = json.loads(CACHE.read_text())
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _save_cache(cache: dict) -> None:
+    try:
+        CACHE.write_text(json.dumps(cache, indent=1, sort_keys=True))
+    except Exception:
+        pass
 
 
 def _norm(text: str) -> str:
@@ -44,14 +62,24 @@ def _norm(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
 
 
-def _arxiv_title(arxiv_id: str, attempts: int = 3):
+def _arxiv_title(arxiv_id: str, cache: dict = None, attempts: int = 3):
     """
     The real title of an arXiv entry, or None.
 
-    None means "could not check", never "does not match" — the difference
+    None means "could not check", never "does not match" - the difference
     matters, because a transient network failure must not be reported as
     a broken identifier.
+
+    A title that was verified within the last week is taken from the
+    cache. Re-fetching twenty-two papers on every test run is slow, and
+    being a good citizen of arXiv's rate limit matters more than
+    freshness for a check that only needs to catch a hand-typed id.
     """
+    if cache is not None:
+        hit = cache.get(arxiv_id)
+        if hit and (time.time() - hit.get("checked", 0)) < CACHE_TTL:
+            return hit.get("title")
+
     url = f"{ARXIV_API}?id_list={arxiv_id}&max_results=1"
     for attempt in range(attempts):
         req = urllib.request.Request(url, headers={"User-Agent": "sla-lab/1.0"})
@@ -64,7 +92,18 @@ def _arxiv_title(arxiv_id: str, attempts: int = 3):
             t = re.search(r"<title>(.*?)</title>", m.group(1), re.S)
             if not t:
                 return None
-            return re.sub(r"\s+", " ", t.group(1)).strip()
+            title = re.sub(r"\s+", " ", t.group(1)).strip()
+            if cache is not None:
+                cache[arxiv_id] = {"title": title, "checked": time.time()}
+            time.sleep(3.0)  # arXiv asks for three seconds between calls
+            return title
+        except urllib.error.HTTPError as e:
+            if e.code == 429:
+                # arXiv is rate limiting us. Backing off hard and giving
+                # up is the polite answer; retrying harder is not.
+                time.sleep(10.0 * (attempt + 1))
+                return None
+            time.sleep(2.0 * (attempt + 1))
         except Exception:
             time.sleep(2.0 * (attempt + 1))
     return None
@@ -86,9 +125,11 @@ def test_every_arxiv_identifier_resolves_to_the_claimed_title():
 
     checked = 0
     skipped = []
+    cache = _load_cache()
+    before = set(cache.keys())
     for w in papers:
         arxiv_id = w["url"].rstrip("/").split("/")[-1]
-        real = _arxiv_title(arxiv_id)
+        real = _arxiv_title(arxiv_id, cache)
         if real is None:
             skipped.append((w["id"], arxiv_id))
             continue
@@ -102,7 +143,9 @@ def test_every_arxiv_identifier_resolves_to_the_claimed_title():
             f"{w['id']}: arXiv:{arxiv_id} is titled {real!r}, "
             f"but the knowledge base claims {w['title']!r} "
             f"(unmatched: {missing})")
-        time.sleep(1.0)  # arXiv asks for ~3s between calls; be gentler
+
+    if set(cache.keys()) != before:
+        _save_cache(cache)
 
     if skipped:
         print(f"SKIPPED {len(skipped)} arXiv checks (network unavailable): "

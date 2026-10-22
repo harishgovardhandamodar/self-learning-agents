@@ -19,6 +19,9 @@ exports/*
 node_modules/
 npm-debug.log*
 
+# The arXiv title cache — regenerable, and re-fetched weekly.
+tests/.arxiv_verified.json
+
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 graft/
 
