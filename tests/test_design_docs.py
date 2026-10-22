@@ -149,7 +149,7 @@ def test_the_landscape_document_agrees_with_the_landscape_module():
     falsifiable = ls.summary()["falsifiable"]
     partial = sum(1 for w in ls.works()
                   if ls.assess(w)["verdict"] == "partially falsifiable")
-    assert f"**{falsifiable}** is falsifiable" in text, \
+    assert f"**{falsifiable}** are falsifiable" in text, \
         f"the document states the wrong falsifiable count ({falsifiable})"
     assert f"**{partial}** are partially" in text, \
         f"the document states the wrong partial count ({partial})"

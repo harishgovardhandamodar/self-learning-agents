@@ -391,13 +391,18 @@ reading, and the UI says so on every row.
 The last column is the point: **could this work's own protocol have
 falsified its own claim?** A work that claims to learn but measures nothing
 under drift, or grades only on what it trained on, cannot be contradicted
-by its own results. On the current snapshot, of 31 works:
+by its own results. On the current snapshot, of 36 works:
 
 | | |
 |---|---|
-| 1 | could have falsified its own claim |
-| 7 | partially — measures some effect, but not interference across a changing stream |
+| 4 | could have falsified its own claim |
+| 9 | partially — measures some effect, but not interference across a changing stream |
 | 23 | could not, by its own protocol |
+
+All four that clear the bar are recent harness-evolution work — Darwin
+Gödel Machine, Self-Evolving Agent Harness, EvoHarnessBench, and the
+paper this lab is built on. Everything else in the field either does not
+measure interference or does not hold anything out.
 
 That is the gap this lab exists to work in: a field full of claims that
 nothing in the field is set up to check.

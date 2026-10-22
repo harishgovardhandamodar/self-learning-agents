@@ -54,7 +54,7 @@ def test_every_work_has_provenance():
         assert w.get("summary"), f"{w.get('id')} has no summary"
         assert w.get("mechanism"), f"{w.get('id')} has no mechanism"
         assert w.get("kind") in ("paper", "product", "framework", "writeup",
-                                 "blog", "note"), w.get("kind")
+                                 "blog", "benchmark", "note"), w.get("kind")
         assert w.get("evidence") or True  # the alignment carries it
 
 

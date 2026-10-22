@@ -98,8 +98,10 @@ flowchart TD
 (`yes`, `partial`) with `holdout == yes` is partially falsifiable;
 anything else is not falsifiable by its own protocol.
 
-On the current snapshot of 31 works: **1** is falsifiable, **7** are
-partially, **23** are not. That is the gap this lab works in.
+On the current snapshot of 36 works: **4** are falsifiable, **9** are
+partially, **23** are not. That is the gap this lab works in — and the
+four that clear the bar are all recent harness-evolution work, including
+the paper this lab is built on.
 
 A survey is a special case the rule handles by the alignment, not by
 special-casing the code: a survey's protocol is a literature review, not an

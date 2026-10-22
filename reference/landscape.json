@@ -415,13 +415,13 @@
     {
       "id": "agent-pro",
       "kind": "paper",
-      "title": "Learning to Plan via Agentic Proactive Trajectories",
-      "authors": "Z. Wang et al.",
-      "venue": "ICLR 2024",
+      "title": "Agent-Pro: Learning to Evolve via Policy-Level Reflection and Optimization",
+      "authors": "W. Zhang, K. Tang, H. Wu, M. Wang et al.",
+      "venue": "ICLR 2025",
       "year": 2024,
-      "url": "https://arxiv.org/abs/2402.17537",
-      "summary": "An agent learns proactive behaviours - asking, verifying, taking steps - from its own trajectories.",
-      "mechanism": "Successful trajectories are mined for proactive patterns that are reused as guidance.",
+      "url": "https://arxiv.org/abs/2402.17574",
+      "summary": "An agent learns expertise from interactive experience and elevates its behavioural policy.",
+      "mechanism": "Policy-level reflection mines successful trajectories for proactive behaviours that are reused as guidance.",
       "align": {
         "surface": "workflow",
         "isolation": "no",
@@ -441,10 +441,10 @@
     {
       "id": "agent-tuning",
       "kind": "paper",
-      "title": "AgentTuning: Enabling Generalized Agent Abilities for LLM-based Agents",
-      "authors": "A. Jiang et al.",
+      "title": "AgentTuning: Enabling Generalized Agent Abilities for LLMs",
+      "authors": "A. Zeng, M. Liu, R. Lu, B. Wang et al.",
       "venue": "ICLR 2024",
-      "year": 2024,
+      "year": 2023,
       "url": "https://arxiv.org/abs/2310.12823",
       "summary": "Tuning on agent trajectories generalises multi-turn tool use beyond the training tasks.",
       "mechanism": "Fine-tunes the model on successful trajectories; the weights, not the harness, change.",
@@ -544,10 +544,10 @@
       "id": "godel-agent",
       "kind": "paper",
       "title": "Godel Agent: A Self-Referential Agent Framework for Recursive Self-Improvement",
-      "authors": "J. Sakana AI et al.",
-      "venue": "2025",
-      "year": 2025,
-      "url": "https://arxiv.org/abs/2503.04544",
+      "authors": "X. Yin, X. Wang, L. Pan, L. Lin et al.",
+      "venue": "arXiv 2024",
+      "year": 2024,
+      "url": "https://arxiv.org/abs/2410.04444",
       "summary": "An agent that rewrites its own logic, evaluated as it goes.",
       "mechanism": "Self-modification of the agent's own code, with evaluation gating each accepted change.",
       "align": {
@@ -571,10 +571,10 @@
       "id": "cl-llm-survey",
       "kind": "paper",
       "title": "Continual Learning of Large Language Models: A Comprehensive Survey",
-      "authors": "Z. Luo et al.",
+      "authors": "H. Shi, Z. Xu, H. Wang, W. Qin et al.",
       "venue": "ACM TMLR",
       "year": 2024,
-      "url": "https://arxiv.org/abs/2403.07108",
+      "url": "https://arxiv.org/abs/2404.16789",
       "summary": "Surveys the methods and the evaluation protocols used for continual learning of language models.",
       "mechanism": "A survey: it organises the field and compares the protocols, including catastrophic forgetting.",
       "align": {
@@ -985,6 +985,154 @@
         "transfer"
       ],
       "patterns": []
+    },
+    {
+      "id": "self-evolving-continual-learners",
+      "kind": "paper",
+      "title": "Are Self-Evolving Agents Continual Learners?",
+      "authors": "X. Chen, Y. Huang, Y. Xu, Z. Zhao et al.",
+      "venue": "arXiv 2026",
+      "year": 2026,
+      "url": "https://arxiv.org/abs/2610.25858",
+      "summary": "Tests whether agents that rewrite their own harness from task feedback actually learn continually.",
+      "mechanism": "Nonparametric self-evolution: prompts, memory and skills are rewritten while the model weights stay frozen, over four drifting task streams.",
+      "align": {
+        "surface": "workflow",
+        "isolation": "partial",
+        "retrieval": "cluster + workflow",
+        "evaluation": "yes",
+        "holdout": "yes",
+        "evidence": "preprint"
+      },
+      "concepts": [
+        "self-improvement",
+        "continual-learning",
+        "catastrophic-forgetting",
+        "harness",
+        "transfer"
+      ],
+      "patterns": [
+        "forgetting-decay",
+        "drift-monitoring",
+        "eval-harness-redteam"
+      ]
+    },
+    {
+      "id": "self-evolving-harness",
+      "kind": "paper",
+      "title": "Self-Evolving Agent Harness",
+      "authors": "C. Wei, H. Guan, M. Zhu, K. Zhou et al.",
+      "venue": "arXiv 2026",
+      "year": 2026,
+      "url": "https://arxiv.org/abs/2610.18813",
+      "summary": "Formalises harness self-evolution: what may change, who proposes it, and who admits it.",
+      "mechanism": "Separates update targets from proposal and admission mechanisms, and distinguishes interpreted state from tools, code and plugin composition.",
+      "align": {
+        "surface": "workflow",
+        "isolation": "partial",
+        "retrieval": "explicit key",
+        "evaluation": "yes",
+        "holdout": "yes",
+        "evidence": "preprint"
+      },
+      "concepts": [
+        "self-improvement",
+        "harness",
+        "verifier-feedback",
+        "continual-learning"
+      ],
+      "patterns": [
+        "evaluator-optimizer",
+        "checkpoint-rollback",
+        "canary-shadow"
+      ]
+    },
+    {
+      "id": "evoharnessbench",
+      "kind": "benchmark",
+      "title": "EvoHarnessBench: Can Your Agents Keep Pace with an Evolving Harness?",
+      "authors": "Z. Ke, V. Patil, H. Shi, Y. Li et al.",
+      "venue": "arXiv 2026",
+      "year": 2026,
+      "url": "https://arxiv.org/abs/2609.04280",
+      "summary": "A benchmark that puts the non-stationarity in the harness, not in the task stream.",
+      "mechanism": "17 multi-stage harness streams that add tools, skills and specialist agents, so the agent's own scaffolding changes under it.",
+      "align": {
+        "surface": "nothing",
+        "isolation": "yes",
+        "retrieval": "cluster + workflow",
+        "evaluation": "yes",
+        "holdout": "yes",
+        "evidence": "preprint"
+      },
+      "concepts": [
+        "harness",
+        "continual-learning",
+        "catastrophic-forgetting"
+      ],
+      "patterns": [
+        "eval-harness-redteam",
+        "drift-monitoring",
+        "skill-library"
+      ]
+    },
+    {
+      "id": "atlas",
+      "kind": "paper",
+      "title": "Continual Learning, Not Training: Online Adaptation For Agents",
+      "authors": "A. Jaglan, J. Barnes",
+      "venue": "arXiv 2025",
+      "year": 2025,
+      "url": "https://arxiv.org/abs/2511.01093",
+      "summary": "Gradient-free continual adaptation at inference time, with a memory that stores distilled guidance.",
+      "mechanism": "A Teacher/Student pair: a persistent learning memory holds distilled experience, and the orchestration layer adjusts supervision and plan choice from it.",
+      "align": {
+        "surface": "memory",
+        "isolation": "partial",
+        "retrieval": "similarity",
+        "evaluation": "partial",
+        "holdout": "yes",
+        "evidence": "preprint"
+      },
+      "concepts": [
+        "memory-management",
+        "experience-replay",
+        "continual-learning"
+      ],
+      "patterns": [
+        "memory-consolidation",
+        "long-term-vector-memory",
+        "standard-agent-loop"
+      ]
+    },
+    {
+      "id": "memory-mechanisms-survey",
+      "kind": "paper",
+      "title": "From Storage to Experience: A Survey on the Evolution of LLM Agent Memory Mechanisms",
+      "authors": "J. Luo, Y. Tian, C. Cao, Z. Luo et al.",
+      "venue": "arXiv 2026",
+      "year": 2026,
+      "url": "https://arxiv.org/abs/2605.06716",
+      "summary": "Places agent memory on a three-stage path: storage, reflection, experience.",
+      "mechanism": "A survey: it frames the field's memory designs as a progression rather than a catalogue.",
+      "align": {
+        "surface": "memory",
+        "isolation": "yes",
+        "retrieval": "similarity",
+        "evaluation": "partial",
+        "holdout": "yes",
+        "evidence": "preprint"
+      },
+      "concepts": [
+        "memory-management",
+        "reflection",
+        "continual-learning"
+      ],
+      "patterns": [
+        "memory-consolidation",
+        "semantic-memory-kg",
+        "episodic-memory"
+      ]
     }
   ]
 }
