@@ -12,8 +12,12 @@ can poll. Live mode needs fox-services on :8210 (or Ollama on :11434) -
 from __future__ import annotations
 
 import asyncio
+import logging
+import os
+import socket
 import time
 import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -23,6 +27,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import benchmarks as benchmarks_mod
+from . import constants
 from . import db, designs as designs_mod, design_docs as design_docs_mod
 from . import envs, flows as flows_mod
 from . import landscape as landscape_mod
@@ -35,8 +40,56 @@ from .evolvers import EVOLVERS
 from .llm import get_client
 from .runner import RunConfig, execute
 
+logger = logging.getLogger("sla")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
+
+# Stable worker identity for this process (job tracking persistence)
+WORKER_ID = f"{os.getpid()}@{socket.gethostname()}"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db.init_db()
+    # Recover orphaned jobs from previous run (sync DB calls - sqlite + threading.local
+    # is not safe with asyncio.to_thread under TestClient / single-loop servers)
+    try:
+        rows = db.list_runs(limit=constants.MAX_RUNS_LIST_LIMIT)
+        recovered = []
+        now = time.time()
+        for r in rows:
+            if r.get("status") in ("running",):
+                # Only recover jobs that look orphaned (older than 30s)
+                updated = r.get("updated_at") or 0
+                if now - updated > 30:
+                    db.update_run(r["id"],
+                                  status="error",
+                                  message="server restarted while running",
+                                  error="Job was interrupted by server restart")
+                    recovered.append(r["id"])
+            elif r.get("status") == "pending":
+                # Don't mark very recent pending jobs as orphaned
+                updated = r.get("updated_at") or 0
+                if now - updated > 60:
+                    db.update_run(r["id"],
+                                  status="error",
+                                  message="server restarted while running",
+                                  error="Job was interrupted by server restart")
+                    recovered.append(r["id"])
+        if recovered:
+            logger.warning("Recovered %d orphaned jobs: %s", len(recovered), recovered)
+    except Exception as e:
+        logger.error("Failed to recover orphaned jobs: %s", e)
+    yield
+
+
 app = FastAPI(title="Self-Learning Agent Lab",
-              description="Design, build and test self-learning agents.")
+              description="Design, build and test self-learning agents.",
+              lifespan=lifespan)
+# Init at import too so TestClient without lifespan still works (lifespan runs on top)
 db.init_db()
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
@@ -73,8 +126,10 @@ class RunIn(BaseModel):
     evolver_cfg: Dict[str, Any] = Field(default_factory=dict)
     policy: str = "simulated"
     policy_cfg: Dict[str, Any] = Field(default_factory=dict)
-    block_size: int = 20
-    n_eval: int = 30
+    block_size: int = Field(default=constants.DEFAULT_BLOCK_SIZE,
+                            ge=constants.MIN_BLOCK_SIZE, le=constants.MAX_BLOCK_SIZE)
+    n_eval: int = Field(default=constants.DEFAULT_N_EVAL,
+                        ge=constants.MIN_N_EVAL, le=constants.MAX_N_EVAL)
     max_episodes: Optional[int] = None
     # Task-sampling seeds: vary these across repeated runs for an
     # iteration sweep; equal values reproduce the identical stream.
@@ -103,8 +158,10 @@ class BatchRunIn(BaseModel):
     policy: str = "simulated"
     policy_cfg: Dict[str, Any] = Field(default_factory=dict)
     evolver_cfg: Dict[str, Any] = Field(default_factory=dict)
-    block_size: int = 20
-    n_eval: int = 30
+    block_size: int = Field(default=constants.DEFAULT_BLOCK_SIZE,
+                            ge=constants.MIN_BLOCK_SIZE, le=constants.MAX_BLOCK_SIZE)
+    n_eval: int = Field(default=constants.DEFAULT_N_EVAL,
+                        ge=constants.MIN_N_EVAL, le=constants.MAX_N_EVAL)
     iterations: int = 1
     # Seed bases. Iteration i uses policy_seed_base+i, train_seed_base+i,
     # eval_seed_base+1000+i, run_seed_base+i.
@@ -121,8 +178,10 @@ class SuiteRunIn(BaseModel):
     evolvers: List[str] = Field(default_factory=lambda: ["seed", "reasoningbank",
                                                           "gepa", "metaharness", "scoped"])
     iterations: int = 5
-    block_size: int = 20
-    n_eval: int = 30
+    block_size: int = Field(default=constants.DEFAULT_BLOCK_SIZE,
+                            ge=constants.MIN_BLOCK_SIZE, le=constants.MAX_BLOCK_SIZE)
+    n_eval: int = Field(default=constants.DEFAULT_N_EVAL,
+                        ge=constants.MIN_N_EVAL, le=constants.MAX_N_EVAL)
     policy: str = "simulated"
     name: str = ""
 
@@ -182,8 +241,8 @@ async def design_flow(design_id: str) -> Dict[str, Any]:
     stream_id = spec.get("stream", "workflow")
     scfg = spec.get("stream_cfg") or {}
     try:
-        stream = streams_mod.build_stream(stream_id, block_size=int(scfg.get("block_size", 20)),
-                                          n_eval=int(scfg.get("n_eval", 30)))
+        stream = streams_mod.build_stream(stream_id, block_size=int(scfg.get("block_size", constants.DEFAULT_BLOCK_SIZE)),
+                                          n_eval=int(scfg.get("n_eval", constants.DEFAULT_N_EVAL)))
         groups = list(stream.groups)
     except KeyError:
         groups = []
@@ -195,7 +254,7 @@ async def design_flow(design_id: str) -> Dict[str, Any]:
         "design_id": design_id,
         "diagrams": [
             flows_mod.agent_flow_diagram(d, groups, names),
-            flows_mod.stream_diagram(groups, names, int(scfg.get("block_size", 20))),
+            flows_mod.stream_diagram(groups, names, int(scfg.get("block_size", constants.DEFAULT_BLOCK_SIZE))),
         ],
     }
 
@@ -303,7 +362,9 @@ async def delete_design(design_id: str) -> Dict[str, Any]:
 
 # -------------------------------------------------------------------- runs
 
-def _run_row(run_id: str) -> Dict[str, Any]:
+async def _run_row(run_id: str) -> Dict[str, Any]:
+    # NOTE: sync DB call intentional - sqlite with threading.local is not safe
+    # with asyncio.to_thread under TestClient; local DB ops are fast.
     r = db.get_run(run_id)
     if r is None:
         raise HTTPException(404, f"unknown run '{run_id}'")
@@ -312,13 +373,19 @@ def _run_row(run_id: str) -> Dict[str, Any]:
 
 async def _execute_and_store(run_id: str, cfg: RunConfig) -> None:
     def on_progress(p: Dict[str, Any]) -> None:
-        db.update_run(run_id, progress=float(p.get("progress", 0)),
-                       message=str(p.get("message", "")))
+        try:
+            db.update_run(run_id, progress=float(p.get("progress", 0)),
+                          message=str(p.get("message", ""))[:constants.MAX_MESSAGE_LENGTH])
+        except Exception:
+            pass
 
     def cancelled() -> bool:
         return _CANCEL.get(run_id, False)
 
-    db.update_run(run_id, status="running", progress=0.0, message="starting")
+    logger.info("run %s starting (worker=%s evolver=%s stream=%s)",
+                run_id, WORKER_ID, cfg.evolver, getattr(cfg.stream, 'stream_id', '?') if hasattr(cfg.stream, 'stream_id') else '?')
+    db.update_run(run_id, status="running", progress=0.0, message="starting",
+                  job_started_at=time.time(), worker_id=WORKER_ID)
     try:
         if cfg.policy_mode == "live":
             async with get_client() as client:
@@ -328,38 +395,47 @@ async def _execute_and_store(run_id: str, cfg: RunConfig) -> None:
             res = await execute(cfg, on_progress=on_progress,
                                 should_cancel=cancelled)
         if res.get("cancelled"):
-            db.update_run(run_id, status="cancelled", progress=cfg and 0.0,
-                           message="cancelled by user")
+            db.update_run(run_id, status="cancelled", progress=0.0,
+                          message="cancelled by user")
+            logger.info("run %s cancelled", run_id)
             return
         for cp in res.get("checkpoints", []):
             db.add_checkpoint(run_id, cp["t"], cp.get("label", ""),
                               cp.get("kind", "eval"), cp.get("metrics", {}),
                               cp.get("diagnostics", {}), cp.get("snapshot", {}))
-        for ev in res.get("train_log", [])[:400]:
+        for ev in res.get("train_log", [])[:constants.MAX_TRAIN_LOG_ENTRIES]:
             db.add_trace(run_id, ev.get("t", 0), ev.get("group", ""),
                          "episode", ev)
         import json as _json
         db.update_run(run_id, status="done", progress=1.0,
-                       message=f"T={res['metrics'].get('T')} "
-                               f"Term.={res['metrics'].get('terminal_advantage')}",
-                       result=_json.dumps({
-                           "metrics": res["metrics"],
-                           "failure_modes": res.get("failure_modes", []),
-                           "retrieval": res.get("retrieval", {}),
-                           "attribution": res.get("attribution", {}),
-                           "router": res.get("router", {}),
-                           "guardrails": res.get("guardrails", {}),
-                           "cost": res.get("cost", {}),
-                           "efficiency": res.get("efficiency", {}),
-                           "elapsed_s": res.get("elapsed_s"),
-                       }))
+                      message=f"T={res['metrics'].get('T')} "
+                              f"Term.={res['metrics'].get('terminal_advantage')}",
+                      result=_json.dumps({
+                          "metrics": res["metrics"],
+                          "failure_modes": res.get("failure_modes", []),
+                          "retrieval": res.get("retrieval", {}),
+                          "attribution": res.get("attribution", {}),
+                          "router": res.get("router", {}),
+                          "guardrails": res.get("guardrails", {}),
+                          "cost": res.get("cost", {}),
+                          "efficiency": res.get("efficiency", {}),
+                          "elapsed_s": res.get("elapsed_s"),
+                      }))
     except asyncio.CancelledError:
-        db.update_run(run_id, status="cancelled", message="cancelled by user")
+        try:
+            db.update_run(run_id, status="cancelled", message="cancelled by user")
+        except Exception:
+            pass
+        logger.info("run %s cancelled (async)", run_id)
         raise
     except Exception as e:  # keep the traceback in the record
         import traceback
-        db.update_run(run_id, status="error", message=str(e)[:500],
-                       error=traceback.format_exc()[-4000:])
+        try:
+            db.update_run(run_id, status="error", message=str(e)[:constants.MAX_MESSAGE_LENGTH],
+                          error=traceback.format_exc()[-constants.MAX_ERROR_LENGTH:])
+        except Exception:
+            pass
+        logger.exception("run %s failed", run_id)
 
 
 def _prepare(body_stream: str, body_block: int, body_n_eval: int,
@@ -424,7 +500,7 @@ async def launch_run(body: RunIn) -> Dict[str, Any]:
                     policy_cfg=policy_cfg, max_episodes=body.max_episodes,
                     seed=body.train_seed)
     _spawn(run_id, cfg)
-    return _run_row(run_id)
+    return await _run_row(run_id)
 
 
 @app.post("/api/runs/batch")
@@ -442,8 +518,8 @@ async def launch_batch(body: BatchRunIn) -> Dict[str, Any]:
         raise HTTPException(400, f"unknown evolver(s): {', '.join(unknown)}")
     if not body.evolvers:
         raise HTTPException(400, "no evolvers selected")
-    if body.iterations < 1 or body.iterations > 200:
-        raise HTTPException(400, "iterations must be between 1 and 200")
+    if body.iterations < 1 or body.iterations > constants.MAX_BATCH_ITERATIONS:
+        raise HTTPException(400, f"iterations must be between 1 and {constants.MAX_BATCH_ITERATIONS}")
     if body.policy == "live":
         if await _llm_or_400() is None:
             raise HTTPException(400, "no model backend reachable "
@@ -517,7 +593,7 @@ async def clear_runs(only_status: str = "") -> Dict[str, Any]:
     `only_status` limits the sweep (e.g. "cancelled" to clear the failures,
     "error" to clear crashed runs). With no filter every run goes.
     """
-    rows = db.list_runs(limit=1000)
+    rows = db.list_runs(limit=constants.MAX_RUNS_LIST_LIMIT)
     removed = []
     for r in rows:
         if only_status and r.get("status") != only_status:
@@ -725,8 +801,8 @@ def _cell_summary() -> Dict[str, Any]:
         if not m or "terminal_advantage" not in m:
             continue
         cfg = r.get("config") or {}
-        block = int(cfg.get("block_size", 20) or 20)
-        n_eval = int(cfg.get("n_eval", 30) or 30)
+        block = int(cfg.get("block_size", constants.DEFAULT_BLOCK_SIZE) or constants.DEFAULT_BLOCK_SIZE)
+        n_eval = int(cfg.get("n_eval", constants.DEFAULT_N_EVAL) or constants.DEFAULT_N_EVAL)
         key = f"{r.get('stream_id')}/{r.get('evolver')}/b{block}e{n_eval}"
         cell = cells.setdefault(key, {
             "stream": r.get("stream_id"), "evolver": r.get("evolver"),
@@ -827,8 +903,8 @@ async def suite_run(body: SuiteRunIn) -> Dict[str, Any]:
         raise HTTPException(400, f"unknown evolver(s): {', '.join(unknown)}")
     if not ids:
         raise HTTPException(400, "no scenarios selected")
-    if body.iterations < 1 or body.iterations > 100:
-        raise HTTPException(400, "iterations must be between 1 and 100")
+    if body.iterations < 1 or body.iterations > constants.MAX_SUITE_ITERATIONS:
+        raise HTTPException(400, f"iterations must be between 1 and {constants.MAX_SUITE_ITERATIONS}")
     if body.policy == "live" and await _llm_or_400() is None:
         raise HTTPException(400, "no model backend reachable "
                                  "(fox-services :8210 or Ollama :11434)")
@@ -914,7 +990,7 @@ async def runs_summary(stream: str = "", evolver: str = "") -> Dict[str, Any]:
     in declaration order, so a later declaration would shadow it and
     "summary" would be read as a run id.
     """
-    rows = db.list_runs(limit=1000)
+    rows = db.list_runs(limit=constants.MAX_RUNS_LIST_LIMIT)
     cells: Dict[str, Dict[str, Any]] = {}
     for r in rows:
         if r.get("status") != "done" or not r.get("result"):
@@ -960,7 +1036,7 @@ async def runs_summary(stream: str = "", evolver: str = "") -> Dict[str, Any]:
 
 @app.get("/api/runs/{run_id}")
 async def get_run(run_id: str) -> Dict[str, Any]:
-    r = _run_row(run_id)
+    r = await _run_row(run_id)
     r["checkpoints"] = db.list_checkpoints(run_id)
     env = r["result"] if isinstance(r.get("result"), dict) else {}
     metrics = env.get("metrics", env) if isinstance(env, dict) else {}
@@ -972,15 +1048,16 @@ async def get_run(run_id: str) -> Dict[str, Any]:
 
 
 @app.get("/api/runs/{run_id}/traces")
-async def run_traces(run_id: str, limit: int = 500,
+async def run_traces(run_id: str, limit: int = constants.DEFAULT_TRACES_LIMIT,
                      kind: str = "") -> Dict[str, Any]:
-    _run_row(run_id)
+    await _run_row(run_id)
+    limit = max(1, min(int(limit), constants.MAX_TRACES_LIMIT))
     return {"traces": db.list_traces(run_id, limit=limit, kind=kind or None)}
 
 
 @app.post("/api/runs/{run_id}/cancel")
 async def cancel_run(run_id: str) -> Dict[str, Any]:
-    _run_row(run_id)
+    await _run_row(run_id)
     _CANCEL[run_id] = True
     job = _JOBS.get(run_id)
     if job and not job.done():
@@ -995,7 +1072,7 @@ async def delete_run(run_id: str) -> Dict[str, Any]:
     The lab accumulates cancelled and failed runs; without this the history
     list becomes a graveyard that hides the runs worth looking at.
     """
-    _run_row(run_id)
+    await _run_row(run_id)
     db.delete_run(run_id)
     return {"deleted": run_id}
 
@@ -1007,7 +1084,7 @@ async def duplicate_run(run_id: str) -> Dict[str, Any]:
     The point of a duplicate is to see whether the result was the method or
     the draw: same evolver, same stream, new seeds.
     """
-    src = _run_row(run_id)
+    src = await _run_row(run_id)
     cfg_in = src.get("config") or {}
     body = RunIn(
         design_id=src.get("design_id") or None,
@@ -1018,8 +1095,8 @@ async def duplicate_run(run_id: str) -> Dict[str, Any]:
         policy=src.get("policy", "simulated"),
         policy_cfg={k: v for k, v in (cfg_in.get("policy_cfg") or {}).items()
                     if k != "seed"},
-        block_size=int(cfg_in.get("block_size", 20)),
-        n_eval=int(cfg_in.get("n_eval", 30)),
+        block_size=int(cfg_in.get("block_size", constants.DEFAULT_BLOCK_SIZE)),
+        n_eval=int(cfg_in.get("n_eval", constants.DEFAULT_N_EVAL)),
         train_seed=int(cfg_in.get("train_seed", 1)) + 1,
         eval_seed=int(cfg_in.get("eval_seed", 2)) + 1,
     )

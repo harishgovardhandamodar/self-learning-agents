@@ -42,6 +42,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
+from . import constants
 from .harness import Harness, MemoryItem, new_id, strip_provenance
 from .retrieval import Router, probe_workflow, workflow_descriptor
 
@@ -262,8 +263,8 @@ class ReasoningBankEvolver(Evolver):
 
     def __init__(self, cfg: Optional[Dict[str, Any]] = None):
         super().__init__(cfg)
-        self.top_k = int(self.cfg.get("top_k", 3))
-        self.threshold = float(self.cfg.get("similarity_threshold", 0.0))
+        self.top_k = int(self.cfg.get("top_k", constants.REASONINGBANK_TOP_K))
+        self.threshold = float(self.cfg.get("similarity_threshold", constants.REASONINGBANK_SIMILARITY_THRESHOLD))
         self.scope_mode = self.cfg.get("scope_mode", "global")
 
     async def observe(self, harness: Harness, task, action: Dict[str, Any],
@@ -365,8 +366,8 @@ class GEPAEvolver(Evolver):
 
     def __init__(self, cfg: Optional[Dict[str, Any]] = None):
         super().__init__(cfg)
-        self.max_chars = int(self.cfg.get("max_chars", 1400))
-        self.update_every = int(self.cfg.get("update_every", 5))
+        self.max_chars = int(self.cfg.get("max_chars", constants.GEPA_MAX_CHARS))
+        self.update_every = int(self.cfg.get("update_every", constants.GEPA_UPDATE_EVERY))
         self.scope_mode = self.cfg.get("scope_mode", "global")
         self._pending: List[Dict[str, Any]] = []
 
@@ -503,9 +504,9 @@ class MetaHarnessEvolver(Evolver):
 
     def __init__(self, cfg: Optional[Dict[str, Any]] = None):
         super().__init__(cfg)
-        self.validation_size = int(self.cfg.get("validation_size", 6))
+        self.validation_size = int(self.cfg.get("validation_size", constants.META_VALIDATION_SIZE))
         self.scope_mode = self.cfg.get("scope_mode", "global")
-        self.min_gain = float(self.cfg.get("min_gain", 0.0))
+        self.min_gain = float(self.cfg.get("min_gain", constants.META_MIN_GAIN))
         self.last_proposal: Dict[str, Any] = {}
 
     async def observe(self, harness: Harness, task, action: Dict[str, Any],
@@ -661,10 +662,10 @@ class ScopedEvolver(Evolver):
 
     def __init__(self, cfg: Optional[Dict[str, Any]] = None):
         super().__init__(cfg)
-        self.threshold = float(self.cfg.get("similarity_threshold", 0.0))
+        self.threshold = float(self.cfg.get("similarity_threshold", constants.SCOPED_SIMILARITY_THRESHOLD))
         self.scope_mode = self.cfg.get("scope_mode", "scoped")
-        self.max_per_scope = int(self.cfg.get("max_per_scope", 24))
-        self.top_k = int(self.cfg.get("top_k", 4))
+        self.max_per_scope = int(self.cfg.get("max_per_scope", constants.SCOPED_MAX_PER_SCOPE))
+        self.top_k = int(self.cfg.get("top_k", constants.SCOPED_TOP_K))
 
     def _scope_key(self, task, router: Router) -> str:
         """

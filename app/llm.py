@@ -24,6 +24,8 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
+from . import constants
+
 FOX_SERVICES_URL = os.environ.get("FOX_SERVICES_URL", "http://localhost:8210").rstrip("/")
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/")
 DEFAULT_MODEL = os.environ.get("SLA_MODEL", "fox-managed")
@@ -31,8 +33,8 @@ DEFAULT_EMBED_MODEL = os.environ.get("SLA_EMBED_MODEL", "fox-managed")
 
 # Request timeout. Local 27B-31B models on a shared GPU are slow; a full
 # ReAct rollout with tool feedback can legitimately take minutes.
-CHAT_TIMEOUT = float(os.environ.get("SLA_CHAT_TIMEOUT", "600"))
-EMBED_TIMEOUT = float(os.environ.get("SLA_EMBED_TIMEOUT", "120"))
+CHAT_TIMEOUT = float(os.environ.get("SLA_CHAT_TIMEOUT", str(constants.DEFAULT_CHAT_TIMEOUT)))
+EMBED_TIMEOUT = float(os.environ.get("SLA_EMBED_TIMEOUT", str(constants.DEFAULT_EMBED_TIMEOUT)))
 
 
 class LLMError(RuntimeError):
@@ -50,8 +52,9 @@ class LLMClient:
 
     async def __aenter__(self) -> "LLMClient":
         self._client = httpx.AsyncClient(
-            timeout=httpx.Timeout(CHAT_TIMEOUT, connect=10.0),
-            limits=httpx.Limits(max_connections=32, max_keepalive_connections=8),
+            timeout=httpx.Timeout(CHAT_TIMEOUT, connect=constants.DEFAULT_CONNECT_TIMEOUT),
+            limits=httpx.Limits(max_connections=constants.MAX_CONNECTIONS,
+                                max_keepalive_connections=constants.MAX_KEEPALIVE_CONNECTIONS),
         )
         return self
 
@@ -64,8 +67,9 @@ class LLMClient:
     def client(self) -> httpx.AsyncClient:
         if self._client is None:
             self._client = httpx.AsyncClient(
-                timeout=httpx.Timeout(CHAT_TIMEOUT, connect=10.0),
-                limits=httpx.Limits(max_connections=32, max_keepalive_connections=8),
+                timeout=httpx.Timeout(CHAT_TIMEOUT, connect=constants.DEFAULT_CONNECT_TIMEOUT),
+                limits=httpx.Limits(max_connections=constants.MAX_CONNECTIONS,
+                                    max_keepalive_connections=constants.MAX_KEEPALIVE_CONNECTIONS),
             )
         return self._client
 
@@ -83,7 +87,7 @@ class LLMClient:
         """Which backends are reachable, and what models they offer."""
         out: Dict[str, Any] = {"fox_services": False, "ollama": False, "models": []}
         try:
-            r = await self.client.get(f"{self.fox_url}/api/ollama/models", timeout=8.0)
+            r = await self.client.get(f"{self.fox_url}/api/ollama/models", timeout=constants.DEFAULT_HEALTH_TIMEOUT)
             if r.status_code == 200:
                 out["fox_services"] = True
                 data = r.json()
@@ -97,7 +101,7 @@ class LLMClient:
             pass
         if not out["models"]:
             try:
-                r = await self.client.get(f"{self.ollama_url}/api/tags", timeout=8.0)
+                r = await self.client.get(f"{self.ollama_url}/api/tags", timeout=constants.DEFAULT_HEALTH_TIMEOUT)
                 if r.status_code == 200:
                     out["ollama"] = True
                     data = r.json()

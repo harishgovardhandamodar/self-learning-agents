@@ -15,6 +15,8 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from . import constants
+
 DB_PATH = os.environ.get("SLA_DB", str(Path(__file__).resolve().parent.parent / "data" / "sla.db"))
 Path(os.path.dirname(DB_PATH)).parent.mkdir(parents=True, exist_ok=True)
 
@@ -47,9 +49,12 @@ CREATE TABLE IF NOT EXISTS runs (
     result      TEXT,                   -- metrics JSON (on completion)
     error       TEXT DEFAULT '',
     created_at  REAL NOT NULL,
-    updated_at  REAL NOT NULL
+    updated_at  REAL NOT NULL,
+    job_started_at REAL,                -- when the worker picked up the job
+    worker_id   TEXT DEFAULT ''         -- which worker/instance runs it
 );
 CREATE INDEX IF NOT EXISTS idx_runs_created ON runs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_runs_status ON runs(status, updated_at);
 
 CREATE TABLE IF NOT EXISTS checkpoints (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -108,17 +113,48 @@ def get_conn() -> sqlite3.Connection:
     if conn is None:
         conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=30)
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA synchronous=NORMAL")
-        conn.execute("PRAGMA busy_timeout=30000")
+        conn.execute(f"PRAGMA journal_mode={constants.DB_JOURNAL_MODE}")
+        conn.execute(f"PRAGMA synchronous={constants.DB_SYNCHRONOUS}")
+        conn.execute(f"PRAGMA busy_timeout={constants.DB_BUSY_TIMEOUT}")
         _local.conn = conn
     return conn
+
+
+def _run_migrations(conn: sqlite3.Connection) -> None:
+    """Run schema migrations for existing databases."""
+    # Create migrations table if it doesn't exist
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS schema_migrations (
+            version INTEGER PRIMARY KEY,
+            applied_at REAL NOT NULL
+        )
+    """)
+    conn.commit()
+    
+    migrations = [
+        (1, "ALTER TABLE runs ADD COLUMN job_started_at REAL"),
+        (2, "ALTER TABLE runs ADD COLUMN worker_id TEXT"),
+    ]
+    
+    for version, sql in migrations:
+        cur = conn.execute("SELECT version FROM schema_migrations WHERE version=?", (version,))
+        if cur.fetchone():
+            continue
+        try:
+            conn.execute(sql)
+            conn.execute("INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)",
+                        (version, time.time()))
+            conn.commit()
+        except Exception:
+            # Migration may fail if column already exists or other issues
+            conn.rollback()
 
 
 def init_db() -> None:
     conn = get_conn()
     conn.executescript(SCHEMA)
     conn.commit()
+    _run_migrations(conn)
 
 
 # ------------------------------------------------------------------ designs
@@ -182,9 +218,19 @@ def create_run(run_id: str, design_id: str, name: str, stream_id: str, evolver: 
     return get_run(run_id)
 
 
+_RUN_MUTABLE_COLUMNS = frozenset({
+    "design_id", "name", "stream_id", "evolver", "policy", "model",
+    "status", "progress", "message", "config", "result", "error",
+    "job_started_at", "worker_id",
+})
+
+
 def update_run(run_id: str, **fields) -> None:
     if not fields:
         return
+    unknown = set(fields) - _RUN_MUTABLE_COLUMNS
+    if unknown:
+        raise ValueError(f"unknown run columns: {sorted(unknown)}")
     conn = get_conn()
     cols = ", ".join(f"{k}=?" for k in fields)
     conn.execute(f"UPDATE runs SET {cols}, updated_at=? WHERE id=?",
@@ -208,6 +254,7 @@ def delete_run(run_id: str) -> bool:
 
 
 def list_runs(limit: int = 100) -> List[Dict[str, Any]]:
+    limit = max(1, min(int(limit or 100), constants.MAX_RUNS_LIST_LIMIT))
     rows = get_conn().execute(
         "SELECT * FROM runs ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
     return [_run_row(r) for r in rows]
@@ -259,7 +306,8 @@ def add_trace(run_id: str, t: int, group_id: str, kind: str, payload: Dict[str, 
     conn.commit()
 
 
-def list_traces(run_id: str, limit: int = 500, kind: Optional[str] = None) -> List[Dict[str, Any]]:
+def list_traces(run_id: str, limit: int = constants.MAX_TRACES_LIMIT, kind: Optional[str] = None) -> List[Dict[str, Any]]:
+    limit = max(1, min(int(limit or constants.MAX_TRACES_LIMIT), constants.MAX_TRACES_LIMIT))
     sql = "SELECT * FROM traces WHERE run_id=?"
     args: List[Any] = [run_id]
     if kind:

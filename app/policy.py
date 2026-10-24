@@ -97,6 +97,8 @@ def _triage_prior(query: str) -> Dict[str, Any]:
 
 # -------------------------------------------------------------- simulated
 
+from . import constants
+
 class SimulatedPolicy:
     """
     Deterministic policy used to exercise harness mechanics without a model.
@@ -134,10 +136,11 @@ class SimulatedPolicy:
 
     def __init__(self, cfg: Optional[Dict[str, Any]] = None):
         cfg = cfg or {}
-        self.skill = float(cfg.get("skill", 0.9))
+        self.skill = float(cfg.get("skill", constants.DEFAULT_SKILL))
         self.seed = int(cfg.get("seed", 7))
         self.probe_accuracy = dict(
-            cfg.get("probe_accuracy", {"missing-arg": 0.55, "complete-arg": 0.85})
+            cfg.get("probe_accuracy", {"missing-arg": constants.PROBE_ACCURACY_MISSING,
+                                       "complete-arg": constants.PROBE_ACCURACY_COMPLETE})
         )
         # How often the agent follows a rule that does not fit the request in
         # front of it. The paper's BFCL trace (clarification rate 3.8% -> 29.8%
@@ -145,8 +148,8 @@ class SimulatedPolicy:
         # can never learn. A rule carried over from another ENVIRONMENT is
         # followed less often still - the agent can tell the environments
         # apart from the preamble.
-        self.foreign_follow = float(cfg.get("foreign_follow", 0.30))
-        self.foreign_follow_cross_env = float(cfg.get("foreign_follow_cross_env", 0.15))
+        self.foreign_follow = float(cfg.get("foreign_follow", constants.DEFAULT_FOREIGN_FOLLOW_SAME_ENV))
+        self.foreign_follow_cross_env = float(cfg.get("foreign_follow_cross_env", constants.DEFAULT_FOREIGN_FOLLOW_CROSS_ENV))
 
     def _hit(self, task, salt: str, prob: float) -> bool:
         """

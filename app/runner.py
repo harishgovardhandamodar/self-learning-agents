@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
 from . import cost as cost_mod
+from . import constants
 from . import envs, metrics as metrics_mod
 from .evolvers import Evolver, Lesson, get_evolver
 from .harness import Harness, new_id, seed_harness
@@ -129,7 +130,7 @@ async def execute(cfg: RunConfig, on_progress: ProgressCb = None,
     # (cross-group cosine 0.655-0.706): they share one API catalogue, and the
     # paper's finding is that no surface feature can separate them. Any value
     # in roughly (0.10, 0.65) gives the same partition.
-    router_threshold = float(cfg.evolver_cfg.get("router_threshold", 0.40))
+    router_threshold = float(cfg.evolver_cfg.get("router_threshold", constants.DEFAULT_ROUTER_THRESHOLD))
     router = Router(threshold=router_threshold)
 
     eval_tasks = stream.eval_tasks()
@@ -194,7 +195,7 @@ async def execute(cfg: RunConfig, on_progress: ProgressCb = None,
             # Account what the harness had to write to keep this lesson.
             cost_mod.account_lesson(cost, _last_lesson_of(harness), harness)
 
-        if len(train_log) < 400:
+        if len(train_log) < constants.MAX_TRAIN_LOG_ENTRIES:
             train_log.append({
                 "t": t, "group": task.group, "success": success,
                 "source": inj.source, "reason": detail["reason"],
@@ -202,7 +203,7 @@ async def execute(cfg: RunConfig, on_progress: ProgressCb = None,
                 "template": task.meta.get("tpl", ""),
             })
 
-        if t % 10 == 0 or t == len(train_tasks):
+        if t % constants.PROGRESS_REPORT_INTERVAL == 0 or t == len(train_tasks):
             report("training", done, total,
                    f"block {stream.group_at(t)} - task {t}/{len(train_tasks)}")
 
