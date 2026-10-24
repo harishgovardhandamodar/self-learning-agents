@@ -187,3 +187,33 @@ def test_landscape_pattern_links_resolve_in_the_patterns_catalog():
     for w in ls.works():
         for pid in w.get("patterns", []) or []:
             assert pid in known, f"{w.get('id')} links to unknown pattern {pid}"
+
+
+def test_new_axes_are_populated_with_more_than_one_value():
+    """The v2026-11 axes (forgetting, efficiency, scope) must earn their place."""
+    from app import landscape as ls
+    for axis in ("forgetting", "efficiency", "scope"):
+        values = {ls.align_work(w)[axis] for w in ls.works()}
+        values.discard("unknown")
+        assert len(values) >= 2, f"the axis '{axis}' only ever has one value"
+
+
+def test_search_filters_by_recency_and_falsifiability():
+    from app import landscape as ls
+    recent = ls.search(year_from=2025)
+    assert recent and all((w.get("year") or 0) >= 2025 for w in recent)
+    old = ls.search(year_to=2023)
+    assert old and all((w.get("year") or 9999) <= 2023 for w in old)
+    fals = ls.search(falsifiable="yes")
+    assert fals and all(w["assessment"]["falsifiable"] for w in fals)
+    notf = ls.search(falsifiable="no")
+    assert notf and all(not w["assessment"]["falsifiable"] for w in notf)
+
+
+def test_summary_reports_recency_and_verdicts():
+    from app import landscape as ls
+    s = ls.summary()
+    assert s["by_year"], "no per-year breakdown"
+    assert sum(s["by_year"].values()) <= s["works"]
+    assert s["verdicts"]["falsifiable"] == s["falsifiable"]
+    assert sum(s["verdicts"].values()) == s["works"]

@@ -605,7 +605,9 @@ async def clear_runs(only_status: str = "") -> Dict[str, Any]:
 
 @app.get("/api/landscape")
 async def landscape(q: str = "", kind: str = "", surface: str = "",
-                   evidence: str = "") -> Dict[str, Any]:
+                   evidence: str = "", year_from: Optional[int] = None,
+                   year_to: Optional[int] = None,
+                   falsifiable: str = "") -> Dict[str, Any]:
     """
     The landscape knowledge base: works, their alignment, and the summary.
 
@@ -613,7 +615,8 @@ async def landscape(q: str = "", kind: str = "", surface: str = "",
     the payload marks which is which so a reader cannot confuse them.
     """
     return {
-        "works": landscape_mod.search(q, kind, surface, evidence),
+        "works": landscape_mod.search(q, kind, surface, evidence,
+                                      year_from, year_to, falsifiable),
         "summary": landscape_mod.summary(),
         "dimensions": landscape_mod.dimensions(),
         "concepts": landscape_mod.concepts(),

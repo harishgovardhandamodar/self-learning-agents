@@ -55,10 +55,12 @@ never entered by hand.
 
 ## The axes
 
-Six axes, each a closed set of options, each answerable by reading the
+Nine axes, each a closed set of options, each answerable by reading the
 work. They were chosen because they are the questions the lab already asks
 of its own evolvers — so the field and the lab are measured in the same
-units.
+units. The last three were added in v2026-11, when the 2025 memory wave
+(managed memory layers, learned memory policies, memory benchmarks) made
+the original six under-describe the field.
 
 | axis | question | options |
 |---|---|---|
@@ -68,6 +70,9 @@ units.
 | `evaluation` — **Degradation measured** | does the work measure interference or forgetting across a changing stream? | no · partial · yes |
 | `holdout` — **Disjoint hold-out** | is the agent graded on instances it was not trained on? | no · yes |
 | `evidence` — **Evidence kind** | what kind of source is this? | peer-reviewed · preprint · vendor writeup · blog · open source |
+| `forgetting` — **Forgetting handled** | does the work specify what is discarded or kept as memory grows? | explicit · summarise-only · none |
+| `efficiency` — **Cost of learning reported** | does the work report what learning costs: memory growth, tokens, or calls? | yes · partial · no |
+| `scope` — **Agent scope** | does the work study one agent's memory or memory shared across agents? | single · multi · both |
 
 `unknown` is a legal value on every axis. An axis that could only be
 answered "yes" would be a decoration.
@@ -98,8 +103,8 @@ flowchart TD
 (`yes`, `partial`) with `holdout == yes` is partially falsifiable;
 anything else is not falsifiable by its own protocol.
 
-On the current snapshot of 36 works: **4** are falsifiable, **9** are
-partially, **23** are not. That is the gap this lab works in — and the
+On the current snapshot of 51 works: **4** are falsifiable, **17** are
+partially, **30** are not. That is the gap this lab works in — and the
 four that clear the bar are all recent harness-evolution work, including
 the paper this lab is built on.
 
@@ -148,7 +153,7 @@ never disagree with the numbers.
 
 The shape of a picture matters as much as its content, and mermaid does
 not give it for free. Laid out as "each work points at the concepts it
-implements", thirty-six works and fifteen concepts render as a single
+implements", fifty-one works and twenty-one concepts render as a single
 column over five thousand pixels tall — a picture nobody can read, and
 one an enlarged view cannot rescue.
 

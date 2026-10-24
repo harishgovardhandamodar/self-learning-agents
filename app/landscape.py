@@ -142,13 +142,21 @@ def summary() -> Dict[str, Any]:
     by_kind: Dict[str, int] = {}
     by_evidence: Dict[str, int] = {}
     by_surface: Dict[str, int] = {}
+    by_year: Dict[str, int] = {}
+    verdicts = {"falsifiable": 0, "partially falsifiable": 0,
+                "not falsifiable by its own protocol": 0}
     falsifiable = 0
     for w in ws:
         by_kind[w.get("kind", "other")] = by_kind.get(w.get("kind", "other"), 0) + 1
         a = align_work(w)
         by_evidence[a.get("evidence", "unknown")] = by_evidence.get(a.get("evidence", "unknown"), 0) + 1
         by_surface[a.get("surface", "unknown")] = by_surface.get(a.get("surface", "unknown"), 0) + 1
-        if assess(w)["falsifiable"]:
+        year = w.get("year")
+        if year:
+            by_year[str(year)] = by_year.get(str(year), 0) + 1
+        v = assess(w)
+        verdicts[v["verdict"]] = verdicts.get(v["verdict"], 0) + 1
+        if v["falsifiable"]:
             falsifiable += 1
     return {
         "works": len(ws),
@@ -156,6 +164,8 @@ def summary() -> Dict[str, Any]:
         "by_kind": by_kind,
         "by_evidence": by_evidence,
         "by_surface": by_surface,
+        "by_year": by_year,
+        "verdicts": verdicts,
         "falsifiable": falsifiable,
         "dimensions": len(dims),
         "version": load_landscape().get("version", ""),
@@ -163,7 +173,9 @@ def summary() -> Dict[str, Any]:
 
 
 def search(q: str = "", kind: str = "", surface: str = "",
-           evidence: str = "") -> List[Dict[str, Any]]:
+           evidence: str = "", year_from: Optional[int] = None,
+           year_to: Optional[int] = None,
+           falsifiable: str = "") -> List[Dict[str, Any]]:
     """Filter the knowledge base."""
     query = (q or "").strip().lower()
     out = []
@@ -175,6 +187,17 @@ def search(q: str = "", kind: str = "", surface: str = "",
             continue
         if evidence and a.get("evidence") != evidence:
             continue
+        year = w.get("year")
+        if year_from is not None and (year is None or year < year_from):
+            continue
+        if year_to is not None and (year is None or year > year_to):
+            continue
+        if falsifiable:
+            v = assess(w)
+            if falsifiable == "yes" and not v["falsifiable"]:
+                continue
+            if falsifiable == "no" and v["falsifiable"]:
+                continue
         if query:
             hay = " ".join(str(w.get(k, "")) for k in
                            ("title", "authors", "org", "venue", "summary",
